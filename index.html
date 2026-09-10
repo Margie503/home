@@ -366,7 +366,6 @@
                     <i class="fas fa-check text-4xl text-green-500"></i>
                 </div>
                 <h1 class="font-serif text-3xl text-brand-brown mb-2">¡Pedido procesado!</h1>
-            const orderNumber = generateOrderNumber();
                 <p class="text-gray-600 mb-6">Serás redirigido a WhatsApp para finalizar la comunicación con nosotros.</p>
                 <div class="bg-brand-light p-4 rounded mb-8 inline-block">
                     <span class="text-sm text-gray-500 block mb-1">Número de pedido:</span>
@@ -839,13 +838,6 @@
 
         // --- 5. LOGICA DE ACCIONES ---
         
-        function generateOrderNumber() {
-            const key = 'margie_last_order_number';
-            let number = parseInt(localStorage.getItem(key) || '0', 10) + 1;
-            localStorage.setItem(key, String(number));
-            return `MC-${String(number).padStart(4, '0')}`;
-        }
-
         function addToCart(productId, qty = 1, aroma = '', size = '') {
             const product = productos.find(p => p.id === productId);
             if (!product) return;
@@ -963,7 +955,7 @@
             const paymentMethod = form.querySelector('input[name="payment"]:checked')?.parentElement?.innerText?.trim() || 'No especificado';
 
             let total = 0;
-            let orderSummary = `Número de pedido: ${orderNumber}\n\n*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
+            let orderSummary = `*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
             orderSummary += `👤 *Cliente:* ${name}\n`;
             orderSummary += `📞 *Teléfono:* ${phone}\n`;
             orderSummary += `✉️ *Email:* ${email}\n`;
