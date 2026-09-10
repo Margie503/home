@@ -945,8 +945,8 @@
                 const orderId = 'MARG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
                 document.getElementById('order-number').innerText = orderId;
                 
-                // Abrir enlace de WhatsApp con el número +50377190952
-                const whatsappUrl = `https://wa.me/50377190952?text=${encodeURIComponent(orderSummary)}`;
+                // Abrir enlace de WhatsApp con el número +50374750007
+                const whatsappUrl = `https://wa.me/50374750007?text=${encodeURIComponent(orderSummary)}`;
                 window.open(whatsappUrl, '_blank');
 
                 // Limpiar carrito y guardar estado
@@ -981,7 +981,7 @@
 
         function updateWhatsAppLink() {
             const btn = document.getElementById('whatsapp-btn');
-            const baseNumber = "50377190952";
+            const baseNumber = "50374750007";
             let text = "Hola MARGIE, me gustaría hacer una consulta.";
             
             if (state.cart.length > 0) {
