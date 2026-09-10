@@ -838,6 +838,13 @@
 
         // --- 5. LOGICA DE ACCIONES ---
         
+        function generateOrderNumber() {
+            const key = 'margie_last_order_number';
+            let number = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+            localStorage.setItem(key, String(number));
+            return `MC-${String(number).padStart(4, '0')}`;
+        }
+
         function addToCart(productId, qty = 1, aroma = '', size = '') {
             const product = productos.find(p => p.id === productId);
             if (!product) return;
@@ -945,7 +952,9 @@
         function handleCheckout(e) {
             e.preventDefault();
             
-            const form = e.target;
+            
+            const orderNumber = generateOrderNumber();
+const form = e.target;
             const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]');
             const name = textInputs[0].value + ' ' + textInputs[1].value;
             const email = textInputs[2].value;
@@ -955,7 +964,7 @@
             const paymentMethod = form.querySelector('input[name="payment"]:checked')?.parentElement?.innerText?.trim() || 'No especificado';
 
             let total = 0;
-            let orderSummary = `*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
+            let orderSummary = `Número de pedido: ${orderNumber}\n\n*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
             orderSummary += `👤 *Cliente:* ${name}\n`;
             orderSummary += `📞 *Teléfono:* ${phone}\n`;
             orderSummary += `✉️ *Email:* ${email}\n`;
@@ -980,8 +989,7 @@
             btn.disabled = true;
 
             setTimeout(() => {
-                const orderId = 'MARG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-                document.getElementById('order-number').innerText = orderId;
+                document.getElementById('order-number').innerText = orderNumber;
                 
                 const whatsappUrl = `https://wa.me/50374750007?text=${encodeURIComponent(orderSummary)}`;
                 window.open(whatsappUrl, '_blank');
