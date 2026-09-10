@@ -22,6 +22,9 @@
     <!-- FontAwesome (Iconos) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- PapaParse para lectura de CSV de Google Sheets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
     <!-- Configuración Tailwind -->
     <script>
         tailwind.config = {
@@ -46,7 +49,7 @@
         }
     </script>
 
-    <!-- Estilos Personalizados (Simulando CSS externo) -->
+    <!-- Estilos Personalizados -->
     <style>
         body { background-color: #FDFBF7; color: #4A3B32; }
         
@@ -89,9 +92,10 @@
 
     <!-- Pantalla de carga inicial -->
     <div id="loader">
-        <div class="text-center">
+        <div class="text-center" id="loader-content">
             <div class="spinner mb-4 mx-auto"></div>
             <h1 class="font-serif text-2xl text-brand-brown tracking-widest">MARGIE</h1>
+            <p class="text-xs text-brand-gold mt-2">Cargando catálogo...</p>
         </div>
     </div>
 
@@ -109,12 +113,11 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center justify-center md:justify-start flex-1 md:flex-none">
                     <a href="#" onclick="navigate('home')" class="flex items-center">
-                        <img src="logo.png" class="h-14 md:h-16 w-auto object-contain hover:opacity-80 transition-opacity">
+                        <img src="logo.png" class="h-14 md:h-16 w-auto object-contain hover:opacity-80 transition-opacity" alt="Logo">
                          <h2 class="font-serif text-2xl md:text-3xl font-bold tracking-[0.2em] text-brand-brown hover:opacity-80 transition-opacity">MARGIE<span class="text-brand-gold">.</span></h2>
                     </a>
                 </div>
 
-                
                 <!-- Desktop Menu -->
                 <nav class="hidden md:flex space-x-8">
                     <a href="#" onclick="navigate('home')" class="text-brand-brown hover:text-brand-gold transition-colors text-sm uppercase tracking-wider font-semibold">Inicio</a>
@@ -123,7 +126,6 @@
                     <a href="#footer" class="text-brand-brown hover:text-brand-gold transition-colors text-sm uppercase tracking-wider font-semibold">Contacto</a>
                 </nav>
 
-            
                 <!-- Icons (Search, Heart, Cart) -->
                 <div class="flex items-center space-x-4 md:space-x-6">
                     <button onclick="navigate('shop')" class="text-brand-brown hover:text-brand-gold transition-colors" title="Buscar">
@@ -155,10 +157,10 @@
     <!-- Espaciador para nav fija -->
     <div class="h-20"></div>
 
-    <!-- MAIN CONTENT CONTAINER (SPA Views) -->
+    <!-- MAIN CONTENT CONTAINER -->
     <main class="flex-grow">
 
-        <!-- ================= VISTA: INICIO (HOME) ================= -->
+        <!-- ================= VISTA: INICIO ================= -->
         <section id="view-home" class="view-section active animate-fade-in">
             <!-- Hero Section -->
             <div class="relative h-[80vh] flex items-center justify-center bg-brand-dark overflow-hidden">
@@ -192,7 +194,7 @@
                     </div>
                     <!-- Cat 2 -->
                     <div class="relative h-96 group cursor-pointer overflow-hidden rounded-md" onclick="navigate('shop', { category: 'Cítricos' })">
-                        <img src="https://images.unsplash.com/photo-1605651202774-7d573fd3f12d?auto=format&fit=crop&w=600&q=80" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="[Image of Naranja]">
+                        <img src="https://images.unsplash.com/photo-1605651202774-7d573fd3f12d?auto=format&fit=crop&w=600&q=80" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="">
                         <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
                         <div class="absolute inset-0 flex flex-col items-center justify-center text-white">
                             <h3 class="font-serif text-3xl mb-2">Energía</h3>
@@ -218,7 +220,6 @@
                         <h2 class="font-serif text-3xl md:text-4xl text-brand-brown mb-4">Favoritos de Margie</h2>
                         <div class="w-16 h-0.5 bg-brand-gold mx-auto"></div>
                     </div>
-                    <!-- Contenedor dinámico de productos destacados -->
                     <div id="featured-products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <!-- Renderizado por JS -->
                     </div>
@@ -244,7 +245,7 @@
             </div>
         </section>
 
-        <!-- ================= VISTA: TIENDA (CATÁLOGO) ================= -->
+        <!-- ================= VISTA: TIENDA ================= -->
         <section id="view-shop" class="view-section py-10 max-w-7xl mx-auto px-4 min-h-screen">
             <div class="text-center mb-10">
                 <h1 class="font-serif text-4xl text-brand-brown mb-2">Nuestra Colección</h1>
@@ -388,7 +389,6 @@
 
                     <button type="submit" class="w-full bg-brand-gold hover:bg-brand-goldhover text-white px-4 py-4 rounded-sm uppercase tracking-wider font-bold transition-colors">Confirmar Pedido</button>
                     
-                    <p class="text-xs text-center text-gray-400 mt-4">*Este es un entorno de simulación (SPA estática). Ningún dato de pago real es procesado.</p>
                 </form>
             </div>
         </section>
@@ -399,8 +399,8 @@
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <i class="fas fa-check text-4xl text-green-500"></i>
                 </div>
-                <h1 class="font-serif text-3xl text-brand-brown mb-2">¡Pedido realizado con éxito!</h1>
-                <p class="text-gray-600 mb-6">Gracias por tu compra. Hemos simulado la creación de tu pedido.</p>
+                <h1 class="font-serif text-3xl text-brand-brown mb-2">¡Pedido procesado!</h1>
+                <p class="text-gray-600 mb-6">Serás redirigido a WhatsApp para finalizar la comunicación con nosotros.</p>
                 <div class="bg-brand-light p-4 rounded mb-8 inline-block">
                     <span class="text-sm text-gray-500 block mb-1">Número de pedido:</span>
                     <strong class="text-xl text-brand-brown tracking-widest" id="order-number"></strong>
@@ -432,7 +432,7 @@
     <footer id="footer" class="bg-brand-dark text-white pt-16 pb-8 border-t-4 border-brand-gold">
         <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
             <div>
-                <img src="data:image/png;base64,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" alt="MARGIE CANDLES" class="h-16 w-auto object-contain mb-4">
+                <img src="logo.png" alt="MARGIE CANDLES" class="h-16 w-auto object-contain mb-4 bg-white/10 rounded p-1">
                 <p class="text-gray-400 text-sm mb-6">Artesanía, luz y aromas que transforman tus espacios. Hechas a mano con cera de soja 100% natural.</p>
                 <div class="flex space-x-4">
                     <a href="https://instagram.com/velas_margie?stkn=MXZiMjhoMWRiZjZqMQ==" target="_blank" rel="noopener noreferrer" aria-label="Instagram de MARGIE CANDLES" class="text-gray-400 hover:text-brand-gold transition-colors"><i class="fab fa-instagram text-xl"></i></a>
@@ -446,7 +446,6 @@
                     <li><a href="#" onclick="navigate('home')" class="hover:text-white transition-colors">Inicio</a></li>
                     <li><a href="#" onclick="navigate('shop')" class="hover:text-white transition-colors">Tienda</a></li>
                     <li><a href="#" onclick="navigate('favorites')" class="hover:text-white transition-colors">Favoritos</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Sobre Nosotros</a></li>
                 </ul>
             </div>
             <div>
@@ -454,7 +453,6 @@
                 <ul class="space-y-2 text-sm text-gray-400">
                     <li><a href="#" class="hover:text-white transition-colors">Preguntas Frecuentes</a></li>
                     <li><a href="#" class="hover:text-white transition-colors">Política de Envíos</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Devoluciones</a></li>
                     <li><a href="#" class="hover:text-white transition-colors">Cuidados de tu vela</a></li>
                 </ul>
             </div>
@@ -462,7 +460,6 @@
                 <h3 class="font-serif text-xl mb-4 text-brand-gold">Contacto</h3>
                 <ul class="space-y-3 text-sm text-gray-400">
                     <li><i class="fas fa-envelope mr-2 text-brand-gold"></i> margienegocio@gmail.com </li>
-                    <li><i class="fas fa-phone mr-2 text-brand-gold"></i> +503 7475007</li>
                     <li><i class="fab fa-whatsapp mr-2 text-brand-gold"></i> +503 74750007</li>
                     <li class="mt-4"><span class="block text-brand-gold mb-1">Horarios:</span> Lunes a Viernes: 8am - 5pm</li>
                 </ul>
@@ -470,7 +467,6 @@
         </div>
         <div class="max-w-7xl mx-auto px-4 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
             <p>&copy; 2026 MARGIE CANDLES. Todos los derechos reservados.</p>
-            <p class="mt-1 text-xs">Proyecto de demostración (SPA estática) para GitHub Pages.</p>
         </div>
     </footer>
 
@@ -483,36 +479,49 @@
     <div id="toast-container"></div>
 
     <!-- ========================================== -->
-    <!-- LOGICA JAVASCRIPT (SPA, Estado, Productos) -->
+    <!-- LOGICA JAVASCRIPT -->
     <!-- ========================================== -->
     <script>
-        /**
-         * Jarvis Note: 
-         * Señor Carlos, aquí comienza el corazón lógico del sistema.
-         * En un proyecto tradicional Node.js, esto se dividiría en múltiples archivos en /js/.
-         * Por restricciones estructurales y eficiencia, se ha integrado impecablemente aquí.
-         */
+        // --- 1. BASE DE DATOS DE PRODUCTOS (Dinámica) ---
+        let productos = [];
 
-        // --- 1. BASE DE DATOS DE PRODUCTOS (Simulada) ---
-        const productos = [
-            { id: 1, name: "Vela de Vainilla Francesa", price: 25.00, oldPrice: null, category: "Dulces", aroma: "Vainilla, Caramelo, Mantequilla", size: "250g", stock: 15, rating: 5, isNew: false, image: "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=500&q=80", desc: "Clásica y reconfortante. Llena tu espacio con el aroma dulce y cálido de la vainilla auténtica." },
-            { id: 2, name: "Lavanda & Manzanilla", price: 22.00, oldPrice: 28.00, category: "Relajación", aroma: "Lavanda, Manzanilla, Sándalo", size: "250g", stock: 20, rating: 4.8, isNew: false, image: "https://images.unsplash.com/photo-1596433809252-2591e3e7f2aa?auto=format&fit=crop&w=500&q=80", desc: "Diseñada para apaciguar la mente. Ideal para encender antes de dormir o durante un baño relajante." },
-            { id: 3, name: "Cítricos de Sicilia", price: 24.00, oldPrice: null, category: "Cítricos", aroma: "Naranja dulce, Pomelo, Limón", size: "200g", stock: 10, rating: 4.5, isNew: true, image: "https://images.unsplash.com/photo-1605651202774-7d573fd3f12d?auto=format&fit=crop&w=500&q=80", desc: "Energía pura embotellada. Un estallido cítrico que revitaliza cualquier habitación." },
-            { id: 4, name: "Café Tostado & Avellana", price: 26.00, oldPrice: null, category: "Dulces", aroma: "Café expreso, Avellana tostada", size: "300g", stock: 5, rating: 4.9, isNew: false, image: "https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=500&q=80", desc: "Para los amantes de las mañanas. El aroma robusto del café recién hecho." },
-            { id: 5, name: "Frutos Rojos del Bosque", price: 23.00, oldPrice: 30.00, category: "Frutales", aroma: "Fresa, Mora, Frambuesa", size: "250g", stock: 12, rating: 4.2, isNew: false, image: "https://images.unsplash.com/photo-1606314781498-89c09d3b0366?auto=format&fit=crop&w=500&q=80", desc: "Intensa, dulce y vibrante. Perfecta para ambientar tardes de lectura." },
-            { id: 6, name: "Jardín de Rosas", price: 30.00, oldPrice: null, category: "Florales", aroma: "Rosa Damascena, Peonía", size: "250g", stock: 8, rating: 4.7, isNew: true, image: "https://images.unsplash.com/photo-1530932029707-857e3f60f607?auto=format&fit=crop&w=500&q=80", desc: "Romántica y sofisticada. La esencia pura de un jardín en primavera." },
-            { id: 7, name: "Noche de Jazmín", price: 28.00, oldPrice: null, category: "Florales", aroma: "Jazmín, Ylang Ylang", size: "200g", stock: 15, rating: 4.6, isNew: false, image: "https://images.unsplash.com/photo-1544976722-40995ba1a8d0?auto=format&fit=crop&w=500&q=80", desc: "Misteriosa y cautivadora, perfecta para cenas elegantes o meditación." },
-            { id: 8, name: "Ámbar y Sándalo", price: 35.00, oldPrice: 45.00, category: "Amaderados", aroma: "Sándalo hindú, Ámbar gris", size: "350g", stock: 7, rating: 5, isNew: false, image: "https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&w=500&q=80", desc: "Nuestra vela más premium. Notas profundas, terrosas y sumamente elegantes." },
-            { id: 9, name: "Canela y Manzana", price: 22.00, oldPrice: null, category: "Especias", aroma: "Canela, Manzana horneada", size: "250g", stock: 25, rating: 4.4, isNew: false, image: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=500&q=80", desc: "El aroma tradicional del hogar. Cálida y nostálgica." },
-            { id: 10, name: "Coco Tropical", price: 24.00, oldPrice: null, category: "Frutales", aroma: "Coco cremoso, Vainilla", size: "250g", stock: 14, rating: 4.5, isNew: true, image: "https://images.unsplash.com/photo-1623512270960-e41bf5289f64?auto=format&fit=crop&w=500&q=80", desc: "Un escape instantáneo a la playa. Dulce y relajante." },
-            { id: 11, name: "Chocolate Intenso", price: 25.00, oldPrice: 32.00, category: "Dulces", aroma: "Cacao puro, Crema", size: "250g", stock: 9, rating: 4.8, isNew: false, image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=500&q=80", desc: "Un capricho olfativo sin calorías. Irresistible." },
-            { id: 12, name: "Magia de Navidad", price: 32.00, oldPrice: 40.00, category: "Especias", aroma: "Pino, Clavo, Naranja", size: "300g", stock: 30, rating: 5, isNew: false, image: "https://images.unsplash.com/photo-1543363136-3fdb62e11be5?auto=format&fit=crop&w=500&q=80", desc: "Edición especial de temporada. El espíritu festivo en un frasco." },
-            { id: 13, name: "Té Verde Zen", price: 24.00, oldPrice: null, category: "Relajación", aroma: "Té verde matcha, Bambú", size: "200g", stock: 18, rating: 4.3, isNew: false, image: "https://images.unsplash.com/photo-1620917670397-a4a5402a3c6c?auto=format&fit=crop&w=500&q=80", desc: "Aroma limpio, fresco y purificador." },
-            { id: 14, name: "Madera de Cedro", price: 29.00, oldPrice: null, category: "Amaderados", aroma: "Cedro silvestre, Vetiver", size: "250g", stock: 11, rating: 4.6, isNew: false, image: "https://images.unsplash.com/photo-1608518608316-c774659baf20?auto=format&fit=crop&w=500&q=80", desc: "Un paseo por el bosque lluvioso. Masculina y sofisticada." },
-            { id: 15, name: "Margie Personalizada", price: 45.00, oldPrice: null, category: "Premium", aroma: "A elección", size: "400g", stock: 99, rating: 5, isNew: true, image: "https://images.unsplash.com/photo-1599427382103-3bb8ccecdb3b?auto=format&fit=crop&w=500&q=80", desc: "Creamos tu vela soñada. Elige el envase, el aroma y la etiqueta personalizada." }
-        ];
+        // Función: Extraer datos de Google Sheets
+        function cargarProductosDesdeGoogle() {
+            // URL configurada automáticamente para salida CSV
+            const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBrdUPCHMCq-_CYy906n_OL9XLI8-YufrvTsj0BW7sp6XtsR5Oy-9Hsgv-gkDnCXzbVGhG2JgnKS8u/pub?output=csv';
 
-        // --- 2. GESTIÓN DEL ESTADO (Simulando un framework reactivo y Backend local) ---
+            return new Promise((resolve, reject) => {
+                Papa.parse(urlCSV, {
+                    download: true,
+                    header: true,
+                    dynamicTyping: true, 
+                    complete: function(results) {
+                        // Mapeo defensivo para evitar errores de formato en el CSV
+                        productos = results.data.map(item => ({
+                            id: parseInt(item.id),
+                            name: item.name,
+                            price: parseFloat(item.price),
+                            oldPrice: item.oldPrice ? parseFloat(item.oldPrice) : null,
+                            category: item.category,
+                            aroma: item.aroma,
+                            size: item.size,
+                            stock: parseInt(item.stock),
+                            rating: parseFloat(item.rating),
+                            isNew: item.isNew === 'true' || item.isNew === true,
+                            image: item.image,
+                            desc: item.desc
+                        })).filter(p => !isNaN(p.id)); // Elimina filas vacías accidentales del Excel
+                        resolve();
+                    },
+                    error: function(error) {
+                        console.error("Fallo de red al extraer productos:", error);
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        // --- 2. GESTIÓN DEL ESTADO ---
         let state = {
             cart: JSON.parse(localStorage.getItem('margie_cart')) || [],
             favorites: JSON.parse(localStorage.getItem('margie_favorites')) || [],
@@ -529,12 +538,9 @@
 
         // --- 3. ENRUTADOR SPA (Single Page Application Routing) ---
         function navigate(viewId, params = null) {
-            // Ocultar todas las vistas
             document.querySelectorAll('.view-section').forEach(el => {
                 el.classList.remove('active', 'flex-active', 'animate-fade-in');
             });
-            
-            // Scrollear al inicio
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             const targetView = document.getElementById(`view-${viewId}`);
@@ -543,7 +549,6 @@
                 state.currentView = viewId;
             }
 
-            // Lógica específica por vista
             if (viewId === 'shop') {
                 if (params && params.category) { state.shopFilters.category = params.category; document.querySelector(`input[name="cat"][value="${params.category}"]`)?.click(); }
                 if (params && params.sort) { state.shopFilters.sort = params.sort; document.getElementById('sort-select').value = params.sort; }
@@ -567,21 +572,17 @@
         // --- 4. RENDERIZADO DE COMPONENTES DE UI ---
         
         function updateUI() {
-            // Badge Carrito
             const cartTotalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-count').innerText = cartTotalItems;
             
-            // Badge Favoritos
             const favBadge = document.getElementById('fav-count');
             favBadge.innerText = state.favorites.length;
             if(state.favorites.length > 0) { favBadge.classList.remove('hidden'); } else { favBadge.classList.add('hidden'); }
-
-            // WhatsApp dinámico
             updateWhatsAppLink();
         }
 
         function createProductCardHTML(product) {
-            const hasOffer = product.oldPrice !== null;
+            const hasOffer = product.oldPrice !== null && !isNaN(product.oldPrice);
             const discount = hasOffer ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
             const isFav = state.favorites.includes(product.id);
 
@@ -613,21 +614,17 @@
             `;
         }
 
-        // --- Render Home ---
         function renderHome() {
-            // Destacados (top 4 mejores rating o hardcodeados)
-            const featured = productos.sort((a, b) => b.rating - a.rating).slice(0, 4);
+            const featured = productos.length > 0 ? [...productos].sort((a, b) => b.rating - a.rating).slice(0, 4) : [];
             const container = document.getElementById('featured-products-container');
             container.innerHTML = featured.map(p => createProductCardHTML(p)).join('');
         }
 
-        // --- Render Shop ---
         function renderShop() {
             const container = document.getElementById('shop-products-container');
             const noProductsMsg = document.getElementById('no-products-msg');
             const offerBtn = document.getElementById('btn-show-offers');
 
-            // Actualizar UI de botón de ofertas
             if (state.shopFilters.offersOnly) {
                 offerBtn.classList.replace('bg-brand-light', 'bg-brand-gold');
                 offerBtn.classList.replace('text-brand-gold', 'text-white');
@@ -638,15 +635,13 @@
                 offerBtn.innerText = "Ver solo Ofertas";
             }
 
-            // Aplicar filtros
             let filtered = productos.filter(p => {
                 const matchCat = state.shopFilters.category === 'all' || p.category === state.shopFilters.category;
                 const matchQuery = p.name.toLowerCase().includes(state.shopFilters.query.toLowerCase()) || p.aroma.toLowerCase().includes(state.shopFilters.query.toLowerCase());
-                const matchOffer = state.shopFilters.offersOnly ? p.oldPrice !== null : true;
+                const matchOffer = state.shopFilters.offersOnly ? (p.oldPrice !== null && !isNaN(p.oldPrice)) : true;
                 return matchCat && matchQuery && matchOffer;
             });
 
-            // Aplicar ordenamiento
             if (state.shopFilters.sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
             if (state.shopFilters.sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
             if (state.shopFilters.sort === 'new') filtered.sort((a, b) => (a.isNew === b.isNew) ? 0 : a.isNew ? -1 : 1);
@@ -656,26 +651,22 @@
                 noProductsMsg.classList.remove('hidden');
             } else {
                 noProductsMsg.classList.add('hidden');
-                // Agregar clase de animación a las cards para efecto en cascada visual
                 container.innerHTML = filtered.map((p, i) => {
                     const cardHtml = createProductCardHTML(p);
-                    // Inyectar clase animate-slide-up al div padre generado
                     return cardHtml.replace('product-card', `product-card animate-slide-up bg-white`);
                 }).join('');
             }
         }
 
-        // --- Render Detail ---
         function renderProductDetail() {
             const p = state.currentProduct;
             if(!p) return navigate('shop');
 
             const container = document.getElementById('product-detail-container');
             const isFav = state.favorites.includes(p.id);
-            const hasOffer = p.oldPrice !== null;
+            const hasOffer = p.oldPrice !== null && !isNaN(p.oldPrice);
             const discount = hasOffer ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
 
-            // Renderizar estrellas
             let starsHtml = '';
             for(let i=1; i<=5; i++) {
                 if(i <= Math.floor(p.rating)) starsHtml += '<i class="fas fa-star text-brand-gold"></i>';
@@ -738,7 +729,6 @@
             }
         }
 
-        // --- Render Cart ---
         function renderCartView() {
             const container = document.getElementById('cart-items-container');
             const emptyMsg = document.getElementById('empty-cart-msg');
@@ -750,17 +740,17 @@
             } else {
                 emptyMsg.classList.add('hidden');
                 cartContent.classList.remove('hidden');
-                cartContent.classList.add('flex'); // Es lg:flex-row
+                cartContent.classList.add('flex');
 
                 let subtotal = 0;
                 let originalTotal = 0;
 
                 container.innerHTML = state.cart.map((item, index) => {
                     const prod = productos.find(p => p.id === item.productId);
-                    if(!prod) return '';
+                    if(!prod) return ''; // En caso de que se haya eliminado el producto de la base
                     
                     const itemTotal = prod.price * item.quantity;
-                    const itemOriginalTotal = (prod.oldPrice || prod.price) * item.quantity;
+                    const itemOriginalTotal = (prod.oldPrice && !isNaN(prod.oldPrice) ? prod.oldPrice : prod.price) * item.quantity;
                     subtotal += itemTotal;
                     originalTotal += itemOriginalTotal;
 
@@ -792,16 +782,14 @@
             }
         }
 
-        // --- Render Checkout ---
         function renderCheckoutView() {
             let total = state.cart.reduce((sum, item) => {
                 const prod = productos.find(p => p.id === item.productId);
-                return sum + (prod.price * item.quantity);
+                return prod ? sum + (prod.price * item.quantity) : sum;
             }, 0);
             document.getElementById('checkout-total').innerText = `$${total.toFixed(2)}`;
         }
 
-        // --- Render Favorites ---
         function renderFavoritesView() {
             const container = document.getElementById('fav-products-container');
             const emptyMsg = document.getElementById('empty-fav-msg');
@@ -816,8 +804,7 @@
             }
         }
 
-
-        // --- 5. LOGICA DE ACCIONES (Cart, Fav) ---
+        // --- 5. LOGICA DE ACCIONES ---
         
         function addToCart(productId, qty = 1) {
             const exist = state.cart.find(item => item.productId === productId);
@@ -857,7 +844,7 @@
         }
 
         function toggleFavorite(productId, event) {
-            if(event) event.stopPropagation(); // Evitar click en la card
+            if(event) event.stopPropagation(); 
             const index = state.favorites.indexOf(productId);
             if (index > -1) {
                 state.favorites.splice(index, 1);
@@ -868,38 +855,10 @@
             }
             saveState();
             
-            // Re-renderizar si estamos en vistas que dependen de esto
             if(state.currentView === 'shop') renderShop();
             if(state.currentView === 'home') renderHome();
             if(state.currentView === 'product') renderProductDetail();
             if(state.currentView === 'favorites') renderFavoritesView();
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            // Simulacion simple (acepta cualquiera para el demo)
-            state.user = { name: email.split('@')[0], email: email };
-            saveState();
-            showToast("¡Bienvenido de nuevo!");
-            navigate('profile');
-        }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            state.user = { name, email };
-            saveState();
-            showToast("¡Cuenta creada con éxito!");
-            navigate('profile');
-        }
-
-        function handleLogout() {
-            state.user = null;
-            saveState();
-            navigate('home');
-            showToast("Sesión cerrada");
         }
 
         function handleCheckout(e) {
@@ -914,7 +873,6 @@
             const address = addressSelect ? addressSelect.value : 'No especificado';
             const paymentMethod = form.querySelector('input[name="payment"]:checked')?.parentElement?.innerText?.trim() || 'No especificado';
 
-            // Construir resumen detallado del pedido para WhatsApp
             let total = 0;
             let orderSummary = `*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
             orderSummary += `👤 *Cliente:* ${name}\n`;
@@ -944,22 +902,19 @@
                 const orderId = 'MARG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
                 document.getElementById('order-number').innerText = orderId;
                 
-                // Abrir enlace de WhatsApp con el número +50374750007
                 const whatsappUrl = `https://wa.me/50374750007?text=${encodeURIComponent(orderSummary)}`;
                 window.open(whatsappUrl, '_blank');
 
-                // Limpiar carrito y guardar estado
                 state.cart = [];
                 saveState();
                 
-                // Mostrar pantalla de éxito
                 navigate('success');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }, 800);
         }
 
-        // --- 6. UTILIDADES (UI Helpers, Filtros) ---
+        // --- 6. UTILIDADES ---
 
         function showToast(message) {
             const container = document.getElementById('toast-container');
@@ -994,31 +949,38 @@
             btn.href = `https://wa.me/${baseNumber}?text=${encodeURIComponent(text)}`;
         }
 
-        // Generar filtros de categoría dinámicamente
         function setupFilters() {
+            // Extraer categorias únicas de los productos ya cargados
             const cats = [...new Set(productos.map(p => p.category))];
             const catContainer = document.getElementById('category-filters');
             
+            // Limpiar filtros previos excepto "Todas"
+            catContainer.innerHTML = '<li><label class="flex items-center gap-2 cursor-pointer hover:text-brand-gold"><input type="radio" name="cat" value="all" checked class="accent-brand-gold"> Todas</label></li>';
+
             cats.forEach(c => {
-                const li = document.createElement('li');
-                li.innerHTML = `<label class="flex items-center gap-2 cursor-pointer hover:text-brand-gold"><input type="radio" name="cat" value="${c}" class="accent-brand-gold"> ${c}</label>`;
-                catContainer.appendChild(li);
+                // Previene que se rendericen categorias nulas o vacías
+                if(c) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<label class="flex items-center gap-2 cursor-pointer hover:text-brand-gold"><input type="radio" name="cat" value="${c}" class="accent-brand-gold"> ${c}</label>`;
+                    catContainer.appendChild(li);
+                }
             });
 
-            // Listeners
             catContainer.addEventListener('change', (e) => {
                 if(e.target.name === 'cat') { state.shopFilters.category = e.target.value; renderShop(); }
             });
-            document.getElementById('search-input').addEventListener('input', (e) => {
-                state.shopFilters.query = e.target.value; renderShop();
-            });
-            document.getElementById('sort-select').addEventListener('change', (e) => {
-                state.shopFilters.sort = e.target.value; renderShop();
-            });
-            document.getElementById('btn-show-offers').addEventListener('click', () => {
-                state.shopFilters.offersOnly = !state.shopFilters.offersOnly; renderShop();
-            });
         }
+
+        // Listeners estáticos
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            state.shopFilters.query = e.target.value; renderShop();
+        });
+        document.getElementById('sort-select').addEventListener('change', (e) => {
+            state.shopFilters.sort = e.target.value; renderShop();
+        });
+        document.getElementById('btn-show-offers').addEventListener('click', () => {
+            state.shopFilters.offersOnly = !state.shopFilters.offersOnly; renderShop();
+        });
 
         // Efecto scroll nav
         window.addEventListener('scroll', () => {
@@ -1027,18 +989,31 @@
             else { nav.classList.remove('shadow-md'); }
         });
 
-        // --- 7. INICIALIZACIÓN (Boot) ---
+        // --- 7. INICIALIZACIÓN (Boot Async) ---
         document.addEventListener('DOMContentLoaded', () => {
-            setupFilters();
-            renderHome();
-            updateUI();
-            
-            // Simular carga para elegancia
-            setTimeout(() => {
-                const loader = document.getElementById('loader');
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
-            }, 800); // Pequeña demora para apreciar el logo
+            // Iniciar extracción de datos
+            cargarProductosDesdeGoogle().then(() => {
+                // Cuando termine, armamos el sitio
+                setupFilters();
+                renderHome();
+                updateUI();
+                
+                // Retirar pantalla de carga suavemente
+                setTimeout(() => {
+                    const loader = document.getElementById('loader');
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }, 600); 
+
+            }).catch((error) => {
+                console.error("Falla crítica en carga de catálogo:", error);
+                const loaderContent = document.getElementById('loader-content');
+                loaderContent.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                    <h1 class="font-serif text-xl text-brand-brown">Error de conexión</h1>
+                    <p class="text-sm text-gray-500 mt-2">No pudimos conectar con el catálogo en vivo.<br>Por favor, recargue la página.</p>
+                `;
+            });
         });
 
     </script>
