@@ -475,6 +475,10 @@
                                 .map(a => a.trim())
                                 .filter(Boolean),
                             size: item.tamaño,
+                            sizes: String(item.tamaño || '')
+                                .split(',')
+                                .map(s => s.trim())
+                                .filter(Boolean),
                             stock: parseInt(item.stock),
                             rating: 5,
                             isNew: false,
@@ -495,7 +499,8 @@
         let state = {
             cart: (JSON.parse(localStorage.getItem('margie_cart')) || []).map(item => ({
                 ...item,
-                aroma: item.aroma || ''
+                aroma: item.aroma || '',
+                size: item.size || ''
             })),
             favorites: JSON.parse(localStorage.getItem('margie_favorites')) || [],
             currentView: 'home',
@@ -544,6 +549,14 @@
 
         // --- 4. RENDERIZADO DE COMPONENTES DE UI ---
         
+        function getProductSizes(product) {
+            if (Array.isArray(product.sizes) && product.sizes.length) return product.sizes;
+            return String(product.size || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+
         function getProductAromas(product) {
             if (Array.isArray(product.aromas) && product.aromas.length) return product.aromas;
             return String(product.aroma || '')
@@ -596,6 +609,11 @@
                             ${hasOffer ? `<span class="text-gray-400 line-through">$${product.oldPrice.toFixed(2)}</span>` : ''}
                             <span class="font-bold text-brand-brown text-lg">$${product.price.toFixed(2)}</span>
                         </div>
+                        ${getProductSizes(product).length > 1 ? `
+                            <select id="size-card-${product.id}" class="w-full mb-2 p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-brand-gold">
+                                ${getProductSizes(product).map(size => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join('')}
+                            </select>
+                        ` : ''}
                         ${getProductAromas(product).length > 1 ? `
                             <select id="aroma-card-${product.id}" class="w-full mb-2 p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-brand-gold">
                                 ${getProductAromas(product).map(aroma => `<option value="${escapeHtml(aroma)}">${escapeHtml(aroma)}</option>`).join('')}
@@ -707,8 +725,14 @@
                                 `}
                             </div>
                             <div>
-                                <span class="block text-xs text-gray-400 uppercase">Tamaño</span>
-                                <span class="text-brand-brown font-semibold text-sm">${escapeHtml(p.size)}</span>
+                                <span class="block text-xs text-gray-400 uppercase mb-1">Tamaño</span>
+                                ${getProductSizes(p).length > 1 ? `
+                                    <select id="detail-size" class="w-full p-2 border border-gray-200 rounded bg-white text-brand-brown text-sm focus:outline-none focus:border-brand-gold">
+                                        ${getProductSizes(p).map(size => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join('')}
+                                    </select>
+                                ` : `
+                                    <span class="text-brand-brown font-semibold text-sm">${escapeHtml(getProductSizes(p)[0] || 'Sin especificar')}</span>
+                                `}
                             </div>
                         </div>
 
@@ -767,14 +791,14 @@
                             <img src="${prod.image}" alt="${prod.name}" class="w-24 h-24 object-cover rounded">
                             <div class="flex-1 text-center sm:text-left">
                                 <h4 class="font-serif text-lg text-brand-brown">${prod.name}</h4>
-                                <p class="text-xs text-brand-gold mb-1">${prod.size}</p>
+                                <p class="text-xs text-brand-gold mb-1">Tamaño: <strong>${escapeHtml(item.size || prod.size || '')}</strong></p>
                                 ${item.aroma ? `<p class="text-xs text-gray-500 mb-2">Aroma: <strong>${escapeHtml(item.aroma)}</strong></p>` : ''}
                                 <div class="font-bold text-brand-brown">$${prod.price.toFixed(2)}</div>
                             </div>
                             <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">-</button>
+                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, ${JSON.stringify(item.size || '')}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">-</button>
                                 <span class="w-10 text-center font-bold text-sm">${item.quantity}</span>
-                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">+</button>
+                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, ${JSON.stringify(item.size || '')}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">+</button>
                             </div>
                             <div class="w-24 text-right font-bold text-lg text-brand-brown hidden sm:block">
                                 $${itemTotal.toFixed(2)}
@@ -814,61 +838,78 @@
 
         // --- 5. LOGICA DE ACCIONES ---
         
-        function addToCart(productId, qty = 1, aroma = '') {
+        function addToCart(productId, qty = 1, aroma = '', size = '') {
             const product = productos.find(p => p.id === productId);
             if (!product) return;
 
-            const availableAromas = getProductAromas(product);
-            const selectedAroma = aroma || availableAromas[0] || '';
+            const selectedAroma = aroma || getProductAromas(product)[0] || '';
+            const selectedSize = size || getProductSizes(product)[0] || '';
 
             const exist = state.cart.find(item =>
                 item.productId === productId &&
-                (item.aroma || '') === selectedAroma
+                (item.aroma || '') === selectedAroma &&
+                (item.size || '') === selectedSize
             );
 
             if (exist) {
                 exist.quantity += qty;
             } else {
-                state.cart.push({ productId, quantity: qty, aroma: selectedAroma });
+                state.cart.push({
+                    productId,
+                    quantity: qty,
+                    aroma: selectedAroma,
+                    size: selectedSize
+                });
             }
 
             saveState();
-            showToast(selectedAroma ? `Producto agregado con aroma ${selectedAroma} 🛒` : "Producto agregado al carrito 🛒");
+            showToast("Producto agregado al carrito 🛒");
         }
 
         function addProductCardToCart(productId) {
             const product = productos.find(p => p.id === productId);
             if (!product) return;
 
-            const selector = document.getElementById(`aroma-card-${productId}`);
-            const aroma = selector ? selector.value : getProductAromas(product)[0] || '';
-            addToCart(productId, 1, aroma);
+            const aromaSelector = document.getElementById(`aroma-card-${productId}`);
+            const sizeSelector = document.getElementById(`size-card-${productId}`);
+
+            const aroma = aromaSelector ? aromaSelector.value : getProductAromas(product)[0] || '';
+            const size = sizeSelector ? sizeSelector.value : getProductSizes(product)[0] || '';
+
+            addToCart(productId, 1, aroma, size);
         }
 
         function addDetailToCart(productId) {
             const qty = parseInt(document.getElementById('detail-qty').value);
-            const selector = document.getElementById('detail-aroma');
+            const aromaSelector = document.getElementById('detail-aroma');
+            const sizeSelector = document.getElementById('detail-size');
             const product = productos.find(p => p.id === productId);
-            const aroma = selector ? selector.value : (product ? getProductAromas(product)[0] || '' : '');
-            addToCart(productId, qty, aroma);
+
+            const aroma = aromaSelector ? aromaSelector.value : (product ? getProductAromas(product)[0] || '' : '');
+            const size = sizeSelector ? sizeSelector.value : (product ? getProductSizes(product)[0] || '' : '');
+
+            addToCart(productId, qty, aroma, size);
         }
 
-        function updateCartQty(productId, aroma, delta) {
+        function updateCartQty(productId, aroma, size, delta) {
             const item = state.cart.find(i =>
                 i.productId === productId &&
-                (i.aroma || '') === (aroma || '')
+                (i.aroma || '') === (aroma || '') &&
+                (i.size || '') === (size || '')
             );
 
             if (item) {
                 item.quantity += delta;
-                if (item.quantity <= 0) removeFromCart(productId, aroma);
+                if (item.quantity <= 0) removeFromCart(productId, aroma, size);
                 else { saveState(); renderCartView(); }
             }
         }
 
-        function removeFromCart(productId, aroma = '') {
+        function removeFromCart(productId, aroma = '', size = '') {
             state.cart = state.cart.filter(i =>
-                !(i.productId === productId && (i.aroma || '') === (aroma || ''))
+                !(i.productId === productId &&
+                  (i.aroma || '') === (aroma || '') &&
+                  (i.size || '') === (size || ''))
             );
             saveState();
             renderCartView();
@@ -927,7 +968,7 @@
                 if (p) {
                     const itemTotal = p.price * item.quantity;
                     total += itemTotal;
-                    orderSummary += `• ${item.quantity}x ${p.name}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} ($${itemTotal.toFixed(2)})\n`;
+                    orderSummary += `• ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} ($${itemTotal.toFixed(2)})\n`;
                 }
             });
 
@@ -982,7 +1023,7 @@
                 text = "Hola MARGIE, quiero consultar por estos productos de mi carrito:\n";
                 state.cart.forEach(item => {
                     const p = productos.find(prod => prod.id === item.productId);
-                    if(p) text += `- ${item.quantity}x ${p.name}${item.aroma ? ` — Aroma: ${item.aroma}` : ''}\n`;
+                    if(p) text += `- ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''}\n`;
                 });
             }
             
