@@ -470,6 +470,10 @@
                             oldPrice: item['precio original'] ? parseFloat(item['precio original']) : null,
                             category: item.categoria,
                             aroma: item['aroma principal'],
+                            aromas: String(item['aroma principal'] || '')
+                                .split(',')
+                                .map(a => a.trim())
+                                .filter(Boolean),
                             size: item.tamaño,
                             stock: parseInt(item.stock),
                             rating: 5,
@@ -489,7 +493,10 @@
 
         // --- 2. GESTIÓN DEL ESTADO ---
         let state = {
-            cart: JSON.parse(localStorage.getItem('margie_cart')) || [],
+            cart: (JSON.parse(localStorage.getItem('margie_cart')) || []).map(item => ({
+                ...item,
+                aroma: item.aroma || ''
+            })),
             favorites: JSON.parse(localStorage.getItem('margie_favorites')) || [],
             currentView: 'home',
             currentProduct: null,
@@ -537,6 +544,23 @@
 
         // --- 4. RENDERIZADO DE COMPONENTES DE UI ---
         
+        function getProductAromas(product) {
+            if (Array.isArray(product.aromas) && product.aromas.length) return product.aromas;
+            return String(product.aroma || '')
+                .split(',')
+                .map(a => a.trim())
+                .filter(Boolean);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function updateUI() {
             const cartTotalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cart-count').innerText = cartTotalItems;
@@ -572,7 +596,12 @@
                             ${hasOffer ? `<span class="text-gray-400 line-through">$${product.oldPrice.toFixed(2)}</span>` : ''}
                             <span class="font-bold text-brand-brown text-lg">$${product.price.toFixed(2)}</span>
                         </div>
-                        <button onclick="addToCart(${product.id})" class="w-full bg-brand-light border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white py-2 rounded transition-colors text-sm font-bold uppercase tracking-wider">
+                        ${getProductAromas(product).length > 1 ? `
+                            <select id="aroma-card-${product.id}" class="w-full mb-2 p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-brand-gold">
+                                ${getProductAromas(product).map(aroma => `<option value="${escapeHtml(aroma)}">${escapeHtml(aroma)}</option>`).join('')}
+                            </select>
+                        ` : ''}
+                        <button onclick="addProductCardToCart(${product.id})" class="w-full bg-brand-light border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white py-2 rounded transition-colors text-sm font-bold uppercase tracking-wider">
                             Añadir al Carrito
                         </button>
                     </div>
@@ -666,9 +695,21 @@
 
                         <p class="text-gray-600 mb-8 leading-relaxed">${p.desc}</p>
 
-                        <div class="grid grid-cols-2 gap-4 mb-8 bg-brand-light p-4 rounded border border-brand-beige">
-                            <div><span class="block text-xs text-gray-400 uppercase">Aroma principal</span><span class="text-brand-brown font-semibold text-sm">${p.aroma}</span></div>
-                            <div><span class="block text-xs text-gray-400 uppercase">Tamaño</span><span class="text-brand-brown font-semibold text-sm">${p.size}</span></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-brand-light p-4 rounded border border-brand-beige">
+                            <div>
+                                <span class="block text-xs text-gray-400 uppercase mb-1">Aroma</span>
+                                ${getProductAromas(p).length > 1 ? `
+                                    <select id="detail-aroma" class="w-full p-2 border border-gray-200 rounded bg-white text-brand-brown text-sm focus:outline-none focus:border-brand-gold">
+                                        ${getProductAromas(p).map(aroma => `<option value="${escapeHtml(aroma)}">${escapeHtml(aroma)}</option>`).join('')}
+                                    </select>
+                                ` : `
+                                    <span class="text-brand-brown font-semibold text-sm">${escapeHtml(getProductAromas(p)[0] || 'Sin especificar')}</span>
+                                `}
+                            </div>
+                            <div>
+                                <span class="block text-xs text-gray-400 uppercase">Tamaño</span>
+                                <span class="text-brand-brown font-semibold text-sm">${escapeHtml(p.size)}</span>
+                            </div>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-4">
@@ -726,13 +767,14 @@
                             <img src="${prod.image}" alt="${prod.name}" class="w-24 h-24 object-cover rounded">
                             <div class="flex-1 text-center sm:text-left">
                                 <h4 class="font-serif text-lg text-brand-brown">${prod.name}</h4>
-                                <p class="text-xs text-brand-gold mb-2">${prod.size}</p>
+                                <p class="text-xs text-brand-gold mb-1">${prod.size}</p>
+                                ${item.aroma ? `<p class="text-xs text-gray-500 mb-2">Aroma: <strong>${escapeHtml(item.aroma)}</strong></p>` : ''}
                                 <div class="font-bold text-brand-brown">$${prod.price.toFixed(2)}</div>
                             </div>
                             <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-                                <button onclick="updateCartQty(${item.productId}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">-</button>
+                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">-</button>
                                 <span class="w-10 text-center font-bold text-sm">${item.quantity}</span>
-                                <button onclick="updateCartQty(${item.productId}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">+</button>
+                                <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">+</button>
                             </div>
                             <div class="w-24 text-right font-bold text-lg text-brand-brown hidden sm:block">
                                 $${itemTotal.toFixed(2)}
@@ -772,30 +814,62 @@
 
         // --- 5. LOGICA DE ACCIONES ---
         
-        function addToCart(productId, qty = 1) {
-            const exist = state.cart.find(item => item.productId === productId);
-            if (exist) { exist.quantity += qty; } 
-            else { state.cart.push({ productId, quantity: qty }); }
+        function addToCart(productId, qty = 1, aroma = '') {
+            const product = productos.find(p => p.id === productId);
+            if (!product) return;
+
+            const availableAromas = getProductAromas(product);
+            const selectedAroma = aroma || availableAromas[0] || '';
+
+            const exist = state.cart.find(item =>
+                item.productId === productId &&
+                (item.aroma || '') === selectedAroma
+            );
+
+            if (exist) {
+                exist.quantity += qty;
+            } else {
+                state.cart.push({ productId, quantity: qty, aroma: selectedAroma });
+            }
+
             saveState();
-            showToast("Producto agregado al carrito 🛒");
+            showToast(selectedAroma ? `Producto agregado con aroma ${selectedAroma} 🛒` : "Producto agregado al carrito 🛒");
+        }
+
+        function addProductCardToCart(productId) {
+            const product = productos.find(p => p.id === productId);
+            if (!product) return;
+
+            const selector = document.getElementById(`aroma-card-${productId}`);
+            const aroma = selector ? selector.value : getProductAromas(product)[0] || '';
+            addToCart(productId, 1, aroma);
         }
 
         function addDetailToCart(productId) {
             const qty = parseInt(document.getElementById('detail-qty').value);
-            addToCart(productId, qty);
+            const selector = document.getElementById('detail-aroma');
+            const product = productos.find(p => p.id === productId);
+            const aroma = selector ? selector.value : (product ? getProductAromas(product)[0] || '' : '');
+            addToCart(productId, qty, aroma);
         }
 
-        function updateCartQty(productId, delta) {
-            const item = state.cart.find(i => i.productId === productId);
+        function updateCartQty(productId, aroma, delta) {
+            const item = state.cart.find(i =>
+                i.productId === productId &&
+                (i.aroma || '') === (aroma || '')
+            );
+
             if (item) {
                 item.quantity += delta;
-                if (item.quantity <= 0) removeFromCart(productId);
+                if (item.quantity <= 0) removeFromCart(productId, aroma);
                 else { saveState(); renderCartView(); }
             }
         }
 
-        function removeFromCart(productId) {
-            state.cart = state.cart.filter(i => i.productId !== productId);
+        function removeFromCart(productId, aroma = '') {
+            state.cart = state.cart.filter(i =>
+                !(i.productId === productId && (i.aroma || '') === (aroma || ''))
+            );
             saveState();
             renderCartView();
             showToast("Producto eliminado");
@@ -853,7 +927,7 @@
                 if (p) {
                     const itemTotal = p.price * item.quantity;
                     total += itemTotal;
-                    orderSummary += `• ${item.quantity}x ${p.name} ($${itemTotal.toFixed(2)})\n`;
+                    orderSummary += `• ${item.quantity}x ${p.name}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} ($${itemTotal.toFixed(2)})\n`;
                 }
             });
 
@@ -908,7 +982,7 @@
                 text = "Hola MARGIE, quiero consultar por estos productos de mi carrito:\n";
                 state.cart.forEach(item => {
                     const p = productos.find(prod => prod.id === item.productId);
-                    if(p) text += `- ${item.quantity}x ${p.name}\n`;
+                    if(p) text += `- ${item.quantity}x ${p.name}${item.aroma ? ` — Aroma: ${item.aroma}` : ''}\n`;
                 });
             }
             
