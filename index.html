@@ -496,21 +496,21 @@
                     header: true,
                     dynamicTyping: true, 
                     complete: function(results) {
-                        // Mapeo defensivo para evitar errores de formato en el CSV
-                        productos = results.data.map(item => ({
-                            id: parseInt(item.id),
-                            name: item.name,
-                            price: parseFloat(item.price),
-                            oldPrice: item.oldPrice ? parseFloat(item.oldPrice) : null,
-                            category: item.category,
-                            aroma: item.aroma,
-                            size: item.size,
+                        // Mapeo defensivo adaptado a las columnas en español
+                        productos = results.data.map((item, index) => ({
+                            id: parseInt(item.id) || (index + 1),
+                            name: item.nombre,
+                            price: parseFloat(item.precio),
+                            oldPrice: item['precio original'] ? parseFloat(item['precio original']) : null,
+                            category: item.categoria,
+                            aroma: item['aroma principal'],
+                            size: item.tamaño,
                             stock: parseInt(item.stock),
-                            rating: parseFloat(item.rating),
-                            isNew: item.isNew === 'true' || item.isNew === true,
-                            image: item.image,
-                            desc: item.desc
-                        })).filter(p => !isNaN(p.id)); // Elimina filas vacías accidentales del Excel
+                            rating: 5,
+                            isNew: false,
+                            image: item['imagen (link)'],
+                            desc: item.descripcion
+                        })).filter(p => !isNaN(p.price));
                         resolve();
                     },
                     error: function(error) {
