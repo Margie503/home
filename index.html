@@ -666,7 +666,7 @@
         // Función: Extraer datos de Google Sheets
         function cargarProductosDesdeGoogle() {
             // URL configurada automáticamente para salida CSV
-            const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBrdUPCHMCq-_CYy906n_OL9XLI8-YufrvTsj0BW7sp6XtsR5Oy-9Hsgv-gkDnCXzbVGhG2JgnKS8u/pubhtml';
+            const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBrdUPCHMCq-_CYy906n_OL9XLI8-YufrvTsj0BW7sp6XtsR5Oy-9Hsgv-gkDnCXzbVGhG2JgnKS8u/pub?gid=0&single=true&output=csv';
 
             return new Promise((resolve, reject) => {
                 Papa.parse(urlCSV, {
