@@ -87,16 +87,148 @@
         #loader { position: fixed; inset: 0; background: #FDFBF7; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(200, 169, 126, 0.3); border-radius: 50%; border-top-color: #C8A97E; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* =====================================================
+           EXPERIENCIA VISUAL MARGIE — animaciones decorativas
+           No altera carrito, productos, WhatsApp ni administrador
+           ===================================================== */
+        html { scroll-behavior: smooth; }
+        body { overflow-x: hidden; }
+
+        @keyframes softFloat {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-140%) skewX(-18deg); }
+            65%,100% { transform: translateX(240%) skewX(-18deg); }
+        }
+        @keyframes flameDance {
+            0%,100% { transform: translateX(-50%) rotate(-2deg) scale(1,1); border-radius: 52% 48% 58% 42% / 65% 55% 45% 35%; }
+            25% { transform: translateX(-50%) rotate(3deg) scale(.94,1.07); }
+            50% { transform: translateX(-50%) rotate(-4deg) scale(1.05,.95); border-radius: 45% 55% 45% 55% / 58% 66% 34% 42%; }
+            75% { transform: translateX(-50%) rotate(2deg) scale(.98,1.04); }
+        }
+        @keyframes flameInner {
+            0%,100% { transform: translateX(-50%) scale(.88,1); opacity: .95; }
+            50% { transform: translateX(-50%) scale(1.08,.88); opacity: .76; }
+        }
+        @keyframes emberRise {
+            0% { transform: translate3d(0,20px,0) scale(.4); opacity: 0; }
+            15% { opacity: .85; }
+            100% { transform: translate3d(var(--drift, 18px),-150px,0) scale(0); opacity: 0; }
+        }
+        @keyframes loaderGlow {
+            0%,100% { box-shadow: 0 0 18px rgba(200,169,126,.18), 0 0 45px rgba(244,158,75,.08); }
+            50% { box-shadow: 0 0 32px rgba(200,169,126,.34), 0 0 80px rgba(244,158,75,.16); }
+        }
+        @keyframes heroZoom {
+            from { transform: scale(1.04); }
+            to { transform: scale(1.12); }
+        }
+        @keyframes pulseGold {
+            0%,100% { box-shadow: 0 0 0 0 rgba(200,169,126,.16); }
+            50% { box-shadow: 0 0 0 10px rgba(200,169,126,0); }
+        }
+        @keyframes revealUp {
+            from { opacity: 0; transform: translateY(34px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes revealScale {
+            from { opacity: 0; transform: scale(.965); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Entrada con vela/fuego */
+        #loader {
+            background:
+                radial-gradient(circle at 50% 58%, rgba(200,169,126,.18), transparent 28%),
+                radial-gradient(circle at 50% 38%, rgba(244,158,75,.10), transparent 20%),
+                #FDFBF7;
+            overflow: hidden;
+            transition: opacity .75s ease, visibility .75s ease;
+        }
+        #loader::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(200,169,126,.18) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: .24;
+            mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+        }
+        .fire-loader { position: relative; width: 150px; height: 190px; margin: 0 auto 14px; animation: softFloat 3.2s ease-in-out infinite; }
+        .fire-halo { position:absolute; left:50%; top:18px; width:132px; height:132px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(circle, rgba(255,183,79,.25) 0%, rgba(200,169,126,.13) 38%, transparent 70%); filter:blur(5px); animation: loaderGlow 2s ease-in-out infinite; }
+        .flame { position:absolute; z-index:3; left:50%; top:25px; width:46px; height:70px; transform-origin:50% 100%; background:linear-gradient(to top,#f3923b 0%,#ffc45f 52%,#fff3ba 100%); clip-path:polygon(50% 0, 72% 32%, 91% 61%, 77% 88%, 50% 100%, 22% 88%, 7% 61%, 29% 32%); filter:drop-shadow(0 0 10px rgba(255,146,45,.75)); animation: flameDance 1.15s ease-in-out infinite; }
+        .flame::after { content:''; position:absolute; left:50%; bottom:8px; width:19px; height:35px; transform:translateX(-50%); background:linear-gradient(to top,#fff9dc,#ffe693); clip-path:inherit; filter:blur(.2px); animation:flameInner .8s ease-in-out infinite; }
+        .wick { position:absolute; z-index:2; left:50%; top:85px; width:3px; height:16px; transform:translateX(-50%); background:#3d2c26; border-radius:4px; }
+        .candle-body { position:absolute; z-index:1; left:50%; bottom:0; width:76px; height:98px; transform:translateX(-50%); border-radius:10px 10px 18px 18px; background:linear-gradient(90deg,#ead6bd 0%,#fff7ea 42%,#f1dfc8 75%,#dbc0a0 100%); box-shadow:inset -10px 0 18px rgba(74,59,50,.08), 0 18px 35px rgba(74,59,50,.14); }
+        .candle-body::before { content:''; position:absolute; left:0; right:0; top:-6px; height:16px; border-radius:50%; background:#fffaf1; box-shadow:inset 0 -3px 5px rgba(74,59,50,.08); }
+        .candle-label { position:absolute; left:50%; top:40px; transform:translateX(-50%); width:54px; text-align:center; font-family:'Playfair Display',serif; font-size:10px; letter-spacing:.16em; color:#806a57; border-top:1px solid rgba(128,106,87,.4); border-bottom:1px solid rgba(128,106,87,.4); padding:4px 0; }
+        .ember { position:absolute; z-index:4; left:50%; top:74px; width:4px; height:4px; border-radius:50%; background:#ffb75e; box-shadow:0 0 8px #ffb75e; animation:emberRise 2.2s linear infinite; }
+        .ember.e1 { margin-left:-28px; animation-delay:.1s; --drift:-22px; }
+        .ember.e2 { margin-left:24px; animation-delay:.75s; --drift:18px; }
+        .ember.e3 { margin-left:-8px; animation-delay:1.35s; --drift:30px; }
+        .loader-brand { letter-spacing:.34em; text-shadow:0 2px 18px rgba(74,59,50,.08); }
+        .loader-line { width:74px; height:1px; margin:10px auto 0; background:linear-gradient(90deg,transparent,#C8A97E,transparent); }
+        .loader-status { animation:fadeIn 1.3s ease-in-out infinite alternate; }
+
+        /* Hero más vivo, manteniendo su contenido */
+        .margie-hero { isolation:isolate; }
+        .margie-hero::after { content:''; position:absolute; inset:0; z-index:0; background:linear-gradient(180deg,rgba(22,15,12,.08),rgba(22,15,12,.42)), radial-gradient(circle at 50% 42%,transparent 0 18%,rgba(18,12,10,.2) 65%); pointer-events:none; }
+        .margie-hero .hero-bg { animation:heroZoom 18s ease-in-out infinite alternate; will-change:transform; }
+        .hero-kicker { animation:softFloat 4.5s ease-in-out infinite; }
+        .hero-title { text-shadow:0 10px 35px rgba(0,0,0,.28); }
+        .hero-sparkles { position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+        .hero-sparkles span { position:absolute; width:4px; height:4px; border-radius:50%; background:#f6d7a3; box-shadow:0 0 10px rgba(246,215,163,.8); opacity:0; animation:emberRise 5s linear infinite; }
+        .hero-sparkles span:nth-child(1){left:18%;top:72%;animation-delay:.3s;--drift:18px}.hero-sparkles span:nth-child(2){left:36%;top:80%;animation-delay:1.4s;--drift:-16px}.hero-sparkles span:nth-child(3){left:65%;top:76%;animation-delay:2.1s;--drift:23px}.hero-sparkles span:nth-child(4){left:81%;top:68%;animation-delay:3.2s;--drift:-20px}.hero-sparkles span:nth-child(5){left:50%;top:85%;animation-delay:4.1s;--drift:9px}
+
+        /* Botones y tarjetas */
+        button, a { -webkit-tap-highlight-color: transparent; }
+        .bg-brand-gold, button.bg-brand-gold, a.bg-brand-gold { position:relative; overflow:hidden; }
+        .bg-brand-gold::after, button.bg-brand-gold::after, a.bg-brand-gold::after { content:''; position:absolute; top:-35%; left:-35%; width:28%; height:170%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent); transform:translateX(-180%) skewX(-18deg); transition:none; pointer-events:none; }
+        .bg-brand-gold:hover::after, button.bg-brand-gold:hover::after, a.bg-brand-gold:hover::after { animation:shimmer .85s ease; }
+        .product-card { transform-origin:center; border-color:rgba(200,169,126,.25); box-shadow:0 8px 26px rgba(74,59,50,.055); }
+        .product-card:hover { transform:translateY(-8px) scale(1.012); box-shadow:0 20px 48px -18px rgba(74,59,50,.28); border-color:rgba(200,169,126,.62); }
+        .product-card:hover .product-img-wrapper img { transform:scale(1.075); }
+        .product-img-wrapper { position:relative; }
+        .product-img-wrapper::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent 55%,rgba(255,255,255,.16)); opacity:0; transition:opacity .35s ease; pointer-events:none; }
+        .product-card:hover .product-img-wrapper::after { opacity:1; }
+        #whatsapp-btn { animation:pulseGold 2.8s ease-in-out infinite; }
+
+        /* Scroll reveal progresivo */
+        .margie-reveal { opacity:0; transform:translateY(34px); filter:blur(5px); }
+        .margie-reveal.is-visible { animation:revealUp .78s cubic-bezier(.2,.8,.2,1) forwards; }
+        .margie-reveal-scale { opacity:0; transform:scale(.965); }
+        .margie-reveal-scale.is-visible { animation:revealScale .8s cubic-bezier(.2,.8,.2,1) forwards; }
+
+        /* Navbar más elegante al hacer scroll */
+        #navbar { border-bottom:1px solid transparent; }
+        #navbar.nav-scrolled { background:rgba(253,251,247,.88); border-bottom-color:rgba(200,169,126,.22); box-shadow:0 10px 34px rgba(74,59,50,.08); }
+
+        /* Respeta accesibilidad y evita exceso de movimiento */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; }
+            .margie-reveal,.margie-reveal-scale { opacity:1 !important; transform:none !important; filter:none !important; }
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
 
     <!-- Pantalla de carga inicial -->
     <div id="loader">
-        <div class="text-center" id="loader-content">
-            <div class="spinner mb-4 mx-auto"></div>
-            <h1 class="font-serif text-2xl text-brand-brown tracking-widest">MARGIE</h1>
-            <p class="text-xs text-brand-gold mt-2">Cargando catálogo...</p>
+        <div class="text-center relative z-10" id="loader-content">
+            <div class="fire-loader" aria-hidden="true">
+                <div class="fire-halo"></div>
+                <span class="ember e1"></span><span class="ember e2"></span><span class="ember e3"></span>
+                <div class="flame"></div>
+                <div class="wick"></div>
+                <div class="candle-body"><div class="candle-label">MARGIE</div></div>
+            </div>
+            <h1 class="font-serif text-3xl text-brand-brown loader-brand">MARGIE<span class="text-brand-gold">.</span></h1>
+            <div class="loader-line"></div>
+            <p class="loader-status text-[11px] uppercase tracking-[0.24em] text-brand-gold mt-3">Encendiendo tu experiencia...</p>
         </div>
     </div>
 
@@ -169,11 +301,12 @@
 
 <section id="view-home" class="view-section active animate-fade-in">
             <!-- Hero Section -->
-            <div class="relative h-[80vh] flex items-center justify-center bg-brand-dark overflow-hidden">
-                <img src="banner.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-60">
+            <div class="margie-hero relative h-[80vh] flex items-center justify-center bg-brand-dark overflow-hidden">
+                <img src="banner.png" alt="" class="hero-bg absolute inset-0 w-full h-full object-cover opacity-60">
+                <div class="hero-sparkles" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
                 <div class="relative z-10 text-center px-4 max-w-3xl mx-auto animate-slide-up">
-                    <p class="text-brand-gold uppercase tracking-[0.3em] mb-4 text-sm font-semibold">Artesanía & Luz</p>
-                    <h1 class="font-serif text-5xl md:text-7xl text-white mb-6 leading-tight">Ilumina tus <br>momentos.</h1>
+                    <p class="hero-kicker text-brand-gold uppercase tracking-[0.3em] mb-4 text-sm font-semibold">Artesanía & Luz</p>
+                    <h1 class="hero-title font-serif text-5xl md:text-7xl text-white mb-6 leading-tight">Ilumina tus <br>momentos.</h1>
                     <p class="text-gray-200 text-lg md:text-xl mb-10 font-light max-w-xl mx-auto">Velas de soja vertidas a mano, diseñadas para transformar tus espacios en santuarios de paz y elegancia.</p>
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
                         <button onclick="navigate('shop')" class="bg-brand-gold hover:bg-brand-goldhover text-white px-8 py-3 rounded-sm uppercase tracking-wider text-sm font-bold transition-colors">Comprar Ahora</button>
@@ -1790,15 +1923,44 @@ const form = e.target;
         // Efecto scroll nav
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('navbar');
-            if (window.scrollY > 20) { nav.classList.add('shadow-md'); } 
-            else { nav.classList.remove('shadow-md'); }
-        });
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-md', 'nav-scrolled');
+            } else {
+                nav.classList.remove('shadow-md', 'nav-scrolled');
+            }
+        }, { passive: true });
+
+        function setupMargieAnimations() {
+            const targets = document.querySelectorAll(
+                '#view-home section, #view-home > div:not(.margie-hero), .view-section > h1, .view-section > div, #footer > div'
+            );
+            targets.forEach((el, index) => {
+                if (el.closest('#loader') || el.classList.contains('margie-hero')) return;
+                el.classList.add(index % 3 === 0 ? 'margie-reveal-scale' : 'margie-reveal');
+            });
+
+            if (!('IntersectionObserver' in window)) {
+                document.querySelectorAll('.margie-reveal,.margie-reveal-scale').forEach(el => el.classList.add('is-visible'));
+                return;
+            }
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -45px 0px' });
+            document.querySelectorAll('.margie-reveal,.margie-reveal-scale').forEach(el => observer.observe(el));
+        }
 
         // --- 7. INICIALIZACIÓN (Boot Async) ---
         document.addEventListener('DOMContentLoaded', () => {
             // Iniciar extracción de datos
-            setupCustomDeliveryDate();            setupCustomCandlePreview();
-        cargarProductosDesdeGoogle().then(() => {
+            setupCustomDeliveryDate();
+            setupCustomCandlePreview();
+            setupMargieAnimations();
+            cargarProductosDesdeGoogle().then(() => {
                 // Cuando termine, armamos el sitio
                 setupFilters();
                 renderHome();
@@ -1808,8 +1970,8 @@ const form = e.target;
                 setTimeout(() => {
                     const loader = document.getElementById('loader');
                     loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }, 600); 
+                    setTimeout(() => loader.style.display = 'none', 780);
+                }, 1050); 
 
             }).catch((error) => {
                 console.error("Falla crítica en carga de catálogo:", error);
