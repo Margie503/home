@@ -50,6 +50,19 @@
         }
     </script>
 
+    <!-- Tema claro/oscuro: se aplica antes de pintar la página para evitar destellos -->
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('margie_theme');
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark-mode');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Estilos Personalizados -->
     <style>
         body { background-color: #FDFBF7; color: #4A3B32; }
@@ -348,6 +361,133 @@
             .margie-reveal,.margie-reveal-scale { opacity:1 !important; transform:none !important; filter:none !important; }
         }
 
+
+        /* =====================================================
+           MODO OSCURO MARGIE
+           Conserva la paleta café/dorado y todas las animaciones
+           ===================================================== */
+        html.dark-mode { color-scheme: dark; background:#120f0d; }
+        html.dark-mode body {
+            background:#15110f !important;
+            color:#eadfd5 !important;
+        }
+
+        /* Transición suave al alternar tema */
+        body, #navbar, #mobile-menu, .product-card, footer,
+        input, select, textarea, .bg-white, .bg-brand-light, .bg-brand-beige {
+            transition: background-color .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease;
+        }
+
+        html.dark-mode #loader {
+            background:radial-gradient(circle at 50% 33%, #30251f 0%, #1b1512 48%, #100d0b 100%) !important;
+        }
+        html.dark-mode #loader .fire-halo {
+            background:radial-gradient(circle, rgba(255,183,79,.34) 0%, rgba(200,169,126,.18) 38%, transparent 72%);
+        }
+        html.dark-mode #loader .candle-body {
+            box-shadow:0 18px 55px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.08);
+        }
+
+        html.dark-mode #navbar {
+            background:rgba(21,17,15,.93) !important;
+            border-bottom-color:rgba(200,169,126,.14);
+            box-shadow:0 8px 28px rgba(0,0,0,.20);
+        }
+        html.dark-mode #navbar.nav-scrolled {
+            background:rgba(18,15,13,.90) !important;
+            border-bottom-color:rgba(200,169,126,.24) !important;
+            box-shadow:0 12px 34px rgba(0,0,0,.32) !important;
+        }
+        html.dark-mode #mobile-menu { background:#191411 !important; border-color:#3b2f28 !important; }
+
+        /* Superficies */
+        html.dark-mode .bg-white { background-color:#211a16 !important; }
+        html.dark-mode .bg-brand-light { background-color:#171210 !important; }
+        html.dark-mode .bg-brand-beige { background-color:#2b211c !important; }
+        html.dark-mode [class~="bg-brand-light/95"] { background-color:rgba(23,18,16,.95) !important; }
+        html.dark-mode [class~="bg-brand-light/50"] { background-color:rgba(31,24,20,.72) !important; }
+        html.dark-mode [class~="bg-brand-light/40"] { background-color:rgba(31,24,20,.64) !important; }
+        html.dark-mode [class~="bg-brand-beige/40"] { background-color:rgba(45,34,28,.72) !important; }
+        html.dark-mode [class~="bg-white/70"] { background-color:rgba(33,26,22,.88) !important; }
+        html.dark-mode [class~="bg-white/10"] { background-color:rgba(255,255,255,.08) !important; }
+
+        /* Tipografía */
+        html.dark-mode .text-brand-brown { color:#f2e6d9 !important; }
+        html.dark-mode .text-gray-700 { color:#ddd0c5 !important; }
+        html.dark-mode .text-gray-600 { color:#c9bbb0 !important; }
+        html.dark-mode .text-gray-500 { color:#aa9c91 !important; }
+        html.dark-mode .text-gray-400 { color:#91847a !important; }
+        html.dark-mode .text-gray-300 { color:#b9ada4 !important; }
+        html.dark-mode .text-brand-gold { color:#d8b789 !important; }
+
+        /* Bordes, tarjetas y paneles */
+        html.dark-mode .border-brand-beige { border-color:#3c3029 !important; }
+        html.dark-mode .border-gray-200 { border-color:#45372f !important; }
+        html.dark-mode .border-gray-800 { border-color:#49382e !important; }
+        html.dark-mode .product-card {
+            background:#211a16 !important;
+            border-color:#3d3028 !important;
+            box-shadow:0 9px 25px rgba(0,0,0,.18);
+        }
+        @media (hover:hover) and (pointer:fine) {
+            html.dark-mode .product-card:hover {
+                box-shadow:0 18px 46px rgba(0,0,0,.35), 0 0 0 1px rgba(200,169,126,.10);
+            }
+        }
+
+        /* Formularios */
+        html.dark-mode input,
+        html.dark-mode select,
+        html.dark-mode textarea {
+            background-color:#1b1512 !important;
+            color:#f0e5da !important;
+            border-color:#46372f !important;
+        }
+        html.dark-mode input::placeholder,
+        html.dark-mode textarea::placeholder { color:#887a70 !important; }
+        html.dark-mode select option { background:#1b1512; color:#f0e5da; }
+        html.dark-mode input:focus,
+        html.dark-mode select:focus,
+        html.dark-mode textarea:focus {
+            border-color:#C8A97E !important;
+            box-shadow:0 0 0 4px rgba(200,169,126,.14), 0 8px 24px rgba(0,0,0,.18) !important;
+        }
+
+        /* Elementos específicos */
+        html.dark-mode #admin-product-modal { background-color:rgba(0,0,0,.72) !important; }
+        html.dark-mode #admin-product-modal > div > div { background:#211a16 !important; }
+        html.dark-mode #view-success .bg-green-100 { background:#193124 !important; }
+        html.dark-mode #view-success .text-green-500 { color:#6ed398 !important; }
+        html.dark-mode #custom-candle-form,
+        html.dark-mode #checkout-form { color:#eadfd5; }
+        html.dark-mode #toast-container .toast { box-shadow:0 10px 30px rgba(0,0,0,.35); }
+
+        /* El simulador de WhatsApp conserva tonos reconocibles, pero menos brillantes */
+        html.dark-mode #preview-whatsapp-image-img { filter:brightness(.92); }
+        html.dark-mode #view-home [class~="bg-[#e9ded2]"] { background:#2b2622 !important; }
+        html.dark-mode #view-home [class~="bg-[#e2f7cb]"] { background:#223b29 !important; color:#e6f0e8 !important; }
+
+        /* Botón de tema */
+        .theme-toggle-btn { position:relative; }
+        .theme-toggle-btn i { transition:transform .38s cubic-bezier(.2,.8,.2,1), color .25s ease; }
+        .theme-toggle-btn.theme-spin i { transform:rotate(180deg) scale(1.18); }
+        html.dark-mode .theme-toggle-btn { color:#e6c392 !important; }
+        html.dark-mode #margie-scroll-progress {
+            background:linear-gradient(90deg,#806448,#d3af7d,#f0d0a2);
+        }
+
+        /* Scrollbar oscura */
+        html.dark-mode ::-webkit-scrollbar-track { background:#15110f; }
+        html.dark-mode ::-webkit-scrollbar-thumb { background:#6f5842; }
+        html.dark-mode ::-webkit-scrollbar-thumb:hover { background:#C8A97E; }
+
+        @media (prefers-reduced-motion: reduce) {
+            body, #navbar, #mobile-menu, .product-card, footer,
+            input, select, textarea, .bg-white, .bg-brand-light, .bg-brand-beige {
+                transition:none !important;
+            }
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
@@ -395,8 +535,11 @@
                     <a href="#footer" class="text-brand-brown hover:text-brand-gold transition-colors text-sm uppercase tracking-wider font-semibold">Contacto</a>
                 </nav>
 
-                <!-- Icons (Admin, Search, Heart, Cart) -->
+                <!-- Icons (Tema, Admin, Search, Heart, Cart) -->
                 <div class="flex items-center space-x-4 md:space-x-6">
+                    <button type="button" data-theme-toggle onclick="toggleDarkMode()" class="theme-toggle-btn text-brand-brown hover:text-brand-gold transition-colors" title="Activar modo oscuro" aria-label="Activar modo oscuro">
+                        <i class="fas fa-moon text-lg"></i>
+                    </button>
                     <button onclick="navigate('admin')" class="text-brand-brown hover:text-brand-gold transition-colors" title="Administrador" aria-label="Abrir administrador">
                         <i class="fas fa-lock text-lg"></i>
                     </button>
@@ -422,6 +565,9 @@
                 <a href="#" onclick="navigate('shop'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm">Tienda</a>
                 <a href="#" onclick="navigate('shop', { filter: 'ofertas' }); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm text-brand-gold">Ofertas</a>
                 <a href="#" onclick="navigate('favorites'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm">Favoritos</a>
+                <button type="button" data-theme-toggle onclick="toggleDarkMode()" class="theme-toggle-btn w-full px-3 py-2 text-brand-brown uppercase tracking-widest text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-moon"></i><span class="mobile-theme-label">Modo oscuro</span>
+                </button>
             </div>
         </div>
     </header>
@@ -2210,8 +2356,55 @@ const form = e.target;
         }
 
 
+
+        // --- TEMA CLARO / OSCURO ---
+        const MARGIE_THEME_KEY = 'margie_theme';
+
+        function applyMargieTheme(theme, savePreference = true) {
+            const isDark = theme === 'dark';
+            document.documentElement.classList.toggle('dark-mode', isDark);
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun text-lg' : 'fas fa-moon text-lg';
+                }
+                const label = button.querySelector('.mobile-theme-label');
+                if (label) label.textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+                button.setAttribute('title', isDark ? 'Activar modo claro' : 'Activar modo oscuro');
+                button.setAttribute('aria-label', isDark ? 'Activar modo claro' : 'Activar modo oscuro');
+                button.setAttribute('aria-pressed', String(isDark));
+            });
+
+            if (savePreference) {
+                try { localStorage.setItem(MARGIE_THEME_KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+            }
+        }
+
+        function toggleDarkMode() {
+            const currentlyDark = document.documentElement.classList.contains('dark-mode');
+            const nextTheme = currentlyDark ? 'light' : 'dark';
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+                button.classList.remove('theme-spin');
+                void button.offsetWidth;
+                button.classList.add('theme-spin');
+                setTimeout(() => button.classList.remove('theme-spin'), 420);
+            });
+
+            applyMargieTheme(nextTheme, true);
+            if (typeof showToast === 'function') {
+                showToast(nextTheme === 'dark' ? 'Modo oscuro activado 🌙' : 'Modo claro activado ☀️');
+            }
+        }
+
+        function syncThemeControls() {
+            applyMargieTheme(document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light', false);
+        }
+
                 // --- 7. INICIALIZACIÓN (Boot Async) ---
         document.addEventListener('DOMContentLoaded', () => {
+            syncThemeControls();
             // Iniciar extracción de datos
             setupCustomDeliveryDate();
             setupCustomCandlePreview();
