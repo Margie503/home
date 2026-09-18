@@ -454,8 +454,10 @@
         }
 
         /* Elementos específicos */
-        html.dark-mode #admin-product-modal { background-color:rgba(0,0,0,.72) !important; }
-        html.dark-mode #admin-product-modal > div > div { background:#211a16 !important; }
+        html.dark-mode #admin-product-modal,
+        html.dark-mode #admin-coupon-modal { background-color:rgba(0,0,0,.72) !important; }
+        html.dark-mode #admin-product-modal > div > div,
+        html.dark-mode #admin-coupon-modal > div > div { background:#211a16 !important; }
         html.dark-mode #view-success .bg-green-100 { background:#193124 !important; }
         html.dark-mode #view-success .text-green-500 { color:#6ed398 !important; }
         html.dark-mode #custom-candle-form,
@@ -660,6 +662,58 @@
         @media (hover:none), (pointer:coarse), (prefers-reduced-motion: reduce) {
             #fire-cursor { display: none !important; }
         }
+
+
+        /* ================= CUPONES DE DESCUENTO ================= */
+        .coupon-box {
+            border: 1px dashed rgba(200, 169, 126, .65);
+            background: linear-gradient(135deg, rgba(200,169,126,.10), rgba(253,251,247,.7));
+            border-radius: 14px;
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        .coupon-box::after {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            right: -55px;
+            top: -62px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200,169,126,.18), rgba(200,169,126,0) 68%);
+            pointer-events: none;
+        }
+        .coupon-success {
+            animation: couponPop .42s cubic-bezier(.2,.9,.25,1.25);
+        }
+        .coupon-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(200,169,126,.14);
+            color: #4A3B32;
+            border: 1px solid rgba(200,169,126,.30);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        @keyframes couponPop {
+            0% { transform: scale(.92); opacity: 0; }
+            70% { transform: scale(1.035); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        html.dark-mode .coupon-box {
+            background: linear-gradient(135deg, rgba(200,169,126,.10), rgba(27,21,18,.82));
+            border-color: rgba(200,169,126,.45);
+        }
+        html.dark-mode .coupon-tag {
+            color: #f0e5da;
+            background: rgba(200,169,126,.12);
+            border-color: rgba(200,169,126,.28);
+        }
+        html.dark-mode #admin-coupons-table-card { background:#211a16 !important; }
 
     </style>
 </head>
@@ -1103,8 +1157,26 @@
                         <div class="space-y-3 text-sm text-gray-600 mb-4 pb-4 border-b">
                             <div class="flex justify-between"><span>Subtotal:</span> <span id="cart-subtotal">$0.00</span></div>
                             <div class="flex justify-between"><span>Envío:</span> <span id="cart-shipping">Se calcula al elegir el lugar</span></div>
-                            <div class="flex justify-between text-brand-gold"><span>Descuento:</span> <span id="cart-discount">-$0.00</span></div>
+                            <div class="flex justify-between text-brand-gold"><span>Descuento por oferta:</span> <span id="cart-discount">-$0.00</span></div>
+                            <div id="cart-coupon-row" class="hidden flex justify-between text-green-600 font-semibold"><span>Cupón:</span> <span id="cart-coupon-discount">-$0.00</span></div>
                         </div>
+
+                        <div class="coupon-box mb-5">
+                            <div class="flex items-center gap-2 mb-2 text-brand-brown font-semibold text-sm">
+                                <i class="fas fa-ticket-alt text-brand-gold"></i>
+                                <span>¿Tienes un cupón?</span>
+                            </div>
+                            <div id="coupon-entry" class="flex gap-2">
+                                <input id="coupon-code" type="text" inputmode="text" autocomplete="off" maxlength="30" placeholder="Ej: MARGIE10" class="min-w-0 flex-1 px-3 py-2.5 border border-brand-beige rounded-lg bg-white uppercase tracking-wider focus:outline-none focus:border-brand-gold" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCoupon();}">
+                                <button id="coupon-apply-btn" type="button" onclick="applyCoupon()" class="px-4 py-2.5 rounded-lg bg-brand-dark text-white hover:bg-brand-brown transition-colors font-bold text-sm">Aplicar</button>
+                            </div>
+                            <div id="coupon-applied" class="hidden coupon-success mt-2 flex items-center justify-between gap-2">
+                                <span class="coupon-tag"><i class="fas fa-check-circle text-green-500"></i><span id="coupon-applied-label">Cupón aplicado</span></span>
+                                <button type="button" onclick="removeCoupon()" class="text-xs text-red-500 hover:text-red-700 font-semibold">Quitar</button>
+                            </div>
+                            <p id="coupon-message" class="text-xs text-gray-500 mt-2"></p>
+                        </div>
+
                         <div class="flex justify-between text-lg font-bold text-brand-brown mb-6">
                             <span>Total:</span> <span id="cart-total">$0.00</span>
                         </div>
@@ -1162,6 +1234,10 @@
                         <div class="flex justify-between items-center mt-2">
                             <span>Envío:</span>
                             <span id="checkout-shipping" class="font-semibold text-brand-brown">$0.00</span>
+                        </div>
+                        <div id="checkout-coupon-row" class="hidden flex justify-between items-center mt-2 text-green-600">
+                            <span id="checkout-coupon-label">Cupón:</span>
+                            <span id="checkout-coupon-discount" class="font-semibold">-$0.00</span>
                         </div>
                         <div class="flex justify-between items-center mt-3 pt-3 border-t border-brand-beige text-base">
                             <span>Total a pagar:</span>
@@ -1232,12 +1308,15 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <span class="text-brand-gold uppercase tracking-[0.2em] text-xs font-bold">MARGIE CANDLES</span>
-                        <h1 class="font-serif text-3xl md:text-4xl text-brand-brown mt-1">Administrar productos</h1>
-                        <p class="text-gray-500 mt-2">Agrega, edita o elimina productos. Los cambios se guardan en tu hoja de Google Sheets.</p>
+                        <h1 class="font-serif text-3xl md:text-4xl text-brand-brown mt-1">Administrar tienda</h1>
+                        <p class="text-gray-500 mt-2">Gestiona productos y cupones. Los cambios se guardan en tu Google Sheets.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="openAdminProductModal()" class="bg-brand-gold hover:bg-brand-goldhover text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
                             <i class="fas fa-plus mr-2"></i>Agregar producto
+                        </button>
+                        <button onclick="openAdminCouponModal()" class="bg-brand-dark hover:bg-brand-brown text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
+                            <i class="fas fa-ticket-alt mr-2"></i>Agregar cupón
                         </button>
                         <button onclick="adminLogout()" class="bg-white border border-brand-beige hover:border-brand-gold text-brand-brown px-5 py-3 rounded-lg text-sm font-bold transition-colors">
                             <i class="fas fa-sign-out-alt mr-2"></i>Salir
@@ -1268,6 +1347,33 @@
                         </table>
                     </div>
                     <div id="admin-empty-products" class="hidden p-10 text-center text-gray-500">No hay productos para mostrar.</div>
+                </div>
+
+                <div id="admin-coupons-table-card" class="bg-white rounded-xl border border-brand-beige shadow-sm overflow-hidden mt-8">
+                    <div class="p-5 border-b border-brand-beige flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-brand-gold uppercase tracking-[0.2em] text-[10px] font-bold">Promociones</span>
+                            <h2 class="font-serif text-2xl text-brand-brown mt-1">Cupones de descuento</h2>
+                            <p class="text-xs text-gray-500 mt-1">Crea códigos por porcentaje o monto fijo.</p>
+                        </div>
+                        <span id="admin-coupon-count" class="text-sm text-gray-500"></span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-brand-light text-brand-brown">
+                                <tr>
+                                    <th class="text-left p-4 font-semibold">Código</th>
+                                    <th class="text-left p-4 font-semibold">Descuento</th>
+                                    <th class="text-left p-4 font-semibold">Compra mínima</th>
+                                    <th class="text-left p-4 font-semibold">Vence</th>
+                                    <th class="text-left p-4 font-semibold">Estado</th>
+                                    <th class="text-right p-4 font-semibold">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-coupons-body" class="divide-y divide-brand-beige"></tbody>
+                        </table>
+                    </div>
+                    <div id="admin-empty-coupons" class="hidden p-10 text-center text-gray-500">Todavía no tienes cupones.</div>
                 </div>
             </div>
         </section>
@@ -1303,6 +1409,68 @@
                         <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-7 pt-5 border-t border-brand-beige">
                             <button type="button" onclick="closeAdminProductModal()" class="px-5 py-3 rounded-lg border border-brand-beige text-brand-brown font-bold hover:border-brand-gold transition-colors">Cancelar</button>
                             <button id="admin-save-btn" type="submit" class="px-6 py-3 rounded-lg bg-brand-gold hover:bg-brand-goldhover text-white font-bold transition-colors"><i class="fas fa-save mr-2"></i>Guardar producto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal editor de cupón -->
+        <div id="admin-coupon-modal" class="hidden fixed inset-0 bg-black/50 z-[101] p-4 overflow-y-auto">
+            <div class="min-h-full flex items-center justify-center py-6">
+                <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-brand-beige overflow-hidden">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-brand-beige bg-brand-light">
+                        <div>
+                            <h2 id="admin-coupon-modal-title" class="font-serif text-2xl text-brand-brown">Agregar cupón</h2>
+                            <p class="text-xs text-gray-500 mt-1">El código se validará antes de aplicar el descuento.</p>
+                        </div>
+                        <button type="button" onclick="closeAdminCouponModal()" class="w-10 h-10 rounded-full hover:bg-brand-beige text-brand-brown" aria-label="Cerrar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="admin-coupon-form" onsubmit="saveAdminCoupon(event)" class="p-6">
+                        <input id="admin-coupon-row" type="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Código *</label>
+                                <input id="admin-coupon-code" required maxlength="30" class="w-full p-3 border border-brand-beige rounded-lg uppercase tracking-wider focus:outline-none focus:border-brand-gold" placeholder="MARGIE10">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Tipo *</label>
+                                <select id="admin-coupon-type" required class="w-full p-3 border border-brand-beige rounded-lg bg-white focus:outline-none focus:border-brand-gold">
+                                    <option value="porcentaje">Porcentaje (%)</option>
+                                    <option value="fijo">Monto fijo ($)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Valor *</label>
+                                <input id="admin-coupon-value" type="number" min="0.01" step="0.01" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="10">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Compra mínima</label>
+                                <input id="admin-coupon-minimum" type="number" min="0" step="0.01" value="0" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Fecha de vencimiento</label>
+                                <input id="admin-coupon-expires" type="date" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold">
+                                <p class="text-xs text-gray-400 mt-1">Déjalo vacío si no vence.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-brown mb-2">Estado</label>
+                                <select id="admin-coupon-active" class="w-full p-3 border border-brand-beige rounded-lg bg-white focus:outline-none focus:border-brand-gold">
+                                    <option value="true">Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-5 rounded-xl bg-brand-light border border-brand-beige p-4 text-sm text-gray-600">
+                            <i class="fas fa-info-circle text-brand-gold mr-2"></i>
+                            El cupón se aplica al subtotal de productos ya rebajados, antes de sumar el envío.
+                        </div>
+                        <div id="admin-coupon-save-error" class="hidden mt-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm"></div>
+                        <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-7 pt-5 border-t border-brand-beige">
+                            <button type="button" onclick="closeAdminCouponModal()" class="px-5 py-3 rounded-lg border border-brand-beige text-brand-brown font-bold hover:border-brand-gold transition-colors">Cancelar</button>
+                            <button id="admin-coupon-save-btn" type="submit" class="px-6 py-3 rounded-lg bg-brand-gold hover:bg-brand-goldhover text-white font-bold transition-colors"><i class="fas fa-ticket-alt mr-2"></i>Guardar cupón</button>
                         </div>
                     </form>
                 </div>
@@ -1372,6 +1540,8 @@
         const ADMIN_API_URL = 'https://script.google.com/macros/s/AKfycbwIYRiLSDmMVE2BV8JcAzo-kAE4IQGLMzP2ti8QX9uOZRYJFa_G5BrgHbkmzUruwPMyzQ/exec';
         let adminAuthenticated = false;
         let adminSessionPassword = '';
+        let adminCoupons = [];
+        let appliedCoupon = null;
 
         // Función: Extraer datos de Google Sheets
         function cargarProductosDesdeGoogle() {
@@ -1685,12 +1855,130 @@
             }
         }
 
+
+        function getCartSaleSubtotal() {
+            return state.cart.reduce((sum, item) => {
+                const prod = productos.find(p => p.id === item.productId);
+                return prod ? sum + (Number(prod.price || 0) * Number(item.quantity || 0)) : sum;
+            }, 0);
+        }
+
+        function calculateCouponDiscount(coupon, subtotal) {
+            if (!coupon || subtotal <= 0) return 0;
+            const minimum = Number(coupon.minimum || 0);
+            if (subtotal < minimum) return 0;
+            const value = Number(coupon.value || 0);
+            let discount = coupon.type === 'porcentaje' ? subtotal * (value / 100) : value;
+            return Math.min(subtotal, Math.max(0, Math.round((discount + Number.EPSILON) * 100) / 100));
+        }
+
+        async function publicCouponRequest(code, subtotal) {
+            if (!adminApiConfigured()) throw new Error('El sistema de cupones todavía no está conectado.');
+            const body = new URLSearchParams();
+            body.set('action', 'validateCoupon');
+            body.set('codigo', code);
+            body.set('subtotal', String(subtotal));
+            const response = await fetch(ADMIN_API_URL, { method: 'POST', body });
+            if (!response.ok) throw new Error(`Error de conexión (${response.status})`);
+            const data = await response.json();
+            if (!data.ok) throw new Error(data.error || 'No se pudo validar el cupón.');
+            return data;
+        }
+
+        async function applyCoupon() {
+            const input = document.getElementById('coupon-code');
+            const button = document.getElementById('coupon-apply-btn');
+            const message = document.getElementById('coupon-message');
+            const code = String(input?.value || '').trim().toUpperCase().replace(/\s+/g, '');
+            const subtotal = getCartSaleSubtotal();
+            if (!code) {
+                if (message) { message.textContent = 'Escribe un código de cupón.'; message.className = 'text-xs text-red-500 mt-2'; }
+                return;
+            }
+            if (subtotal <= 0) return;
+
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Validando';
+            }
+            if (message) { message.textContent = 'Validando cupón...'; message.className = 'text-xs text-gray-500 mt-2'; }
+
+            try {
+                const result = await publicCouponRequest(code, subtotal);
+                if (!result.valid) {
+                    appliedCoupon = null;
+                    if (message) { message.textContent = result.error || 'Cupón no válido.'; message.className = 'text-xs text-red-500 mt-2'; }
+                    renderCartView();
+                    return;
+                }
+                appliedCoupon = { ...result.coupon };
+                if (input) input.value = result.coupon.code;
+                if (message) { message.textContent = `¡Cupón aplicado! Ahorras $${Number(result.discount || 0).toFixed(2)}.`; message.className = 'text-xs text-green-600 mt-2 font-semibold'; }
+                renderCartView();
+                updateCheckoutTotal();
+                showToast(`Cupón ${result.coupon.code} aplicado 🎟️`);
+            } catch (error) {
+                if (message) { message.textContent = error.message; message.className = 'text-xs text-red-500 mt-2'; }
+            } finally {
+                if (button) { button.disabled = false; button.textContent = 'Aplicar'; }
+            }
+        }
+
+        function removeCoupon(silent = false) {
+            appliedCoupon = null;
+            const input = document.getElementById('coupon-code');
+            if (input) input.value = '';
+            const message = document.getElementById('coupon-message');
+            if (message) { message.textContent = ''; message.className = 'text-xs text-gray-500 mt-2'; }
+            renderCartView();
+            updateCheckoutTotal();
+            if (!silent) showToast('Cupón eliminado');
+        }
+
+        function syncCouponUI(subtotal) {
+            const row = document.getElementById('cart-coupon-row');
+            const amountEl = document.getElementById('cart-coupon-discount');
+            const entry = document.getElementById('coupon-entry');
+            const applied = document.getElementById('coupon-applied');
+            const label = document.getElementById('coupon-applied-label');
+            const input = document.getElementById('coupon-code');
+            const message = document.getElementById('coupon-message');
+
+            if (appliedCoupon && subtotal < Number(appliedCoupon.minimum || 0)) {
+                appliedCoupon = null;
+                if (message) {
+                    message.textContent = 'El carrito ya no alcanza la compra mínima del cupón.';
+                    message.className = 'text-xs text-red-500 mt-2';
+                }
+            }
+
+            const discount = calculateCouponDiscount(appliedCoupon, subtotal);
+            if (appliedCoupon && discount > 0) {
+                row?.classList.remove('hidden');
+                if (amountEl) amountEl.textContent = `-$${discount.toFixed(2)}`;
+                entry?.classList.add('hidden');
+                applied?.classList.remove('hidden');
+                if (label) {
+                    const valueText = appliedCoupon.type === 'porcentaje' ? `${Number(appliedCoupon.value)}%` : `$${Number(appliedCoupon.value).toFixed(2)}`;
+                    label.textContent = `${appliedCoupon.code} · ${valueText}`;
+                }
+                if (input) input.value = appliedCoupon.code;
+            } else {
+                row?.classList.add('hidden');
+                if (amountEl) amountEl.textContent = '-$0.00';
+                entry?.classList.remove('hidden');
+                applied?.classList.add('hidden');
+            }
+            return discount;
+        }
+
         function renderCartView() {
             const container = document.getElementById('cart-items-container');
             const emptyMsg = document.getElementById('empty-cart-msg');
             const cartContent = document.getElementById('cart-content');
 
             if (state.cart.length === 0) {
+                appliedCoupon = null;
                 cartContent.classList.add('hidden');
                 emptyMsg.classList.remove('hidden');
             } else {
@@ -1733,9 +2021,10 @@
                 }).join('');
 
                 const discount = originalTotal - subtotal;
+                const couponDiscount = syncCouponUI(subtotal);
                 document.getElementById('cart-subtotal').innerText = `$${originalTotal.toFixed(2)}`;
                 document.getElementById('cart-discount').innerText = `-$${discount.toFixed(2)}`;
-                document.getElementById('cart-total').innerText = `$${subtotal.toFixed(2)}`;
+                document.getElementById('cart-total').innerText = `$${Math.max(0, subtotal - couponDiscount).toFixed(2)}`;
             }
         }
 
@@ -1752,14 +2041,25 @@
             }, 0);
 
             const shipping = getCheckoutShippingCost();
-            const total = subtotal + shipping;
+            const couponDiscount = calculateCouponDiscount(appliedCoupon, subtotal);
+            const total = Math.max(0, subtotal - couponDiscount) + shipping;
 
             const subtotalEl = document.getElementById('checkout-subtotal');
             const shippingEl = document.getElementById('checkout-shipping');
             const totalEl = document.getElementById('checkout-total');
+            const couponRow = document.getElementById('checkout-coupon-row');
+            const couponLabel = document.getElementById('checkout-coupon-label');
+            const couponDiscountEl = document.getElementById('checkout-coupon-discount');
 
             if (subtotalEl) subtotalEl.innerText = `$${subtotal.toFixed(2)}`;
             if (shippingEl) shippingEl.innerText = shipping ? `$${shipping.toFixed(2)}` : 'Selecciona un lugar';
+            if (appliedCoupon && couponDiscount > 0) {
+                couponRow?.classList.remove('hidden');
+                if (couponLabel) couponLabel.textContent = `Cupón ${appliedCoupon.code}:`;
+                if (couponDiscountEl) couponDiscountEl.textContent = `-$${couponDiscount.toFixed(2)}`;
+            } else {
+                couponRow?.classList.add('hidden');
+            }
             if (totalEl) totalEl.innerText = `$${total.toFixed(2)}`;
         }
 
@@ -2076,9 +2376,19 @@ const form = e.target;
             });
 
             const shippingCost = parseFloat(addressSelect?.selectedOptions?.[0]?.dataset?.shipping || '0') || 0;
-            const total = subtotal + shippingCost;
-            orderSummary += `\n🛍️ *Subtotal:* $${subtotal.toFixed(2)}\n`;
-            orderSummary += `🚚 *Envío:* $${shippingCost.toFixed(2)}\n`;
+            const couponDiscount = calculateCouponDiscount(appliedCoupon, subtotal);
+            const total = Math.max(0, subtotal - couponDiscount) + shippingCost;
+            orderSummary += `
+🛍️ *Subtotal:* $${subtotal.toFixed(2)}
+`;
+            if (appliedCoupon && couponDiscount > 0) {
+                orderSummary += `🎟️ *Cupón:* ${appliedCoupon.code}
+`;
+                orderSummary += `✨ *Descuento cupón:* -$${couponDiscount.toFixed(2)}
+`;
+            }
+            orderSummary += `🚚 *Envío:* $${shippingCost.toFixed(2)}
+`;
             orderSummary += `💰 *Total a pagar:* $${total.toFixed(2)}`;
 
             const btn = form.querySelector('button[type="submit"]');
@@ -2093,6 +2403,7 @@ const form = e.target;
                 window.open(whatsappUrl, '_blank');
 
                 state.cart = [];
+                appliedCoupon = null;
                 saveState();
                 
                 navigate('success');
@@ -2145,6 +2456,7 @@ const form = e.target;
                 login.classList.add('hidden');
                 dashboard.classList.remove('hidden');
                 renderAdminProducts();
+                loadAdminCoupons();
             } else {
                 dashboard.classList.add('hidden');
                 login.classList.remove('hidden');
@@ -2197,7 +2509,9 @@ const form = e.target;
         function adminLogout() {
             adminAuthenticated = false;
             adminSessionPassword = '';
+            adminCoupons = [];
             closeAdminProductModal();
+            closeAdminCouponModal();
             renderAdminView();
             showToast('Sesión de administrador cerrada');
         }
@@ -2350,6 +2664,143 @@ const form = e.target;
                 saveState();
                 refreshStoreAfterAdminChange();
                 showToast('Producto eliminado ✅');
+            } catch (error) {
+                showToast(error.message);
+            }
+        }
+
+
+        async function loadAdminCoupons() {
+            if (!adminAuthenticated) return;
+            try {
+                const result = await adminRequest('listCoupons');
+                adminCoupons = Array.isArray(result.coupons) ? result.coupons : [];
+                renderAdminCoupons();
+            } catch (error) {
+                const empty = document.getElementById('admin-empty-coupons');
+                if (empty) {
+                    empty.textContent = `No se pudieron cargar los cupones: ${error.message}`;
+                    empty.classList.remove('hidden');
+                }
+            }
+        }
+
+        function renderAdminCoupons() {
+            if (!adminAuthenticated) return;
+            const tbody = document.getElementById('admin-coupons-body');
+            const empty = document.getElementById('admin-empty-coupons');
+            const count = document.getElementById('admin-coupon-count');
+            if (!tbody || !empty || !count) return;
+            count.textContent = `${adminCoupons.length} cupón${adminCoupons.length === 1 ? '' : 'es'}`;
+            if (!adminCoupons.length) {
+                tbody.innerHTML = '';
+                empty.textContent = 'Todavía no tienes cupones.';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            tbody.innerHTML = adminCoupons.map(c => {
+                const valueText = c.type === 'porcentaje' ? `${Number(c.value || 0)}%` : `$${Number(c.value || 0).toFixed(2)}`;
+                const minimumText = Number(c.minimum || 0) > 0 ? `$${Number(c.minimum).toFixed(2)}` : 'Sin mínimo';
+                const expiresText = c.expires || 'Sin vencimiento';
+                const active = !!c.active;
+                return `
+                    <tr class="hover:bg-brand-light/50">
+                        <td class="p-4"><span class="coupon-tag"><i class="fas fa-ticket-alt text-brand-gold"></i>${escapeHtml(c.code)}</span></td>
+                        <td class="p-4 font-semibold text-brand-brown">${escapeHtml(valueText)}</td>
+                        <td class="p-4 text-gray-600">${escapeHtml(minimumText)}</td>
+                        <td class="p-4 text-gray-600">${escapeHtml(expiresText)}</td>
+                        <td class="p-4"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${active ? 'Activo' : 'Inactivo'}</span></td>
+                        <td class="p-4"><div class="flex justify-end gap-2 min-w-[120px]"><button onclick="openAdminCouponModal(${Number(c.row)})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button onclick="deleteAdminCoupon(${Number(c.row)})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function openAdminCouponModal(row = null) {
+            if (!adminAuthenticated) return;
+            const modal = document.getElementById('admin-coupon-modal');
+            const form = document.getElementById('admin-coupon-form');
+            const title = document.getElementById('admin-coupon-modal-title');
+            const errorBox = document.getElementById('admin-coupon-save-error');
+            if (!modal || !form) return;
+            form.reset();
+            document.getElementById('admin-coupon-row').value = '';
+            document.getElementById('admin-coupon-minimum').value = '0';
+            document.getElementById('admin-coupon-active').value = 'true';
+            errorBox?.classList.add('hidden');
+
+            if (row !== null) {
+                const coupon = adminCoupons.find(c => Number(c.row) === Number(row));
+                if (!coupon) return;
+                title.textContent = 'Editar cupón';
+                document.getElementById('admin-coupon-row').value = coupon.row;
+                document.getElementById('admin-coupon-code').value = coupon.code || '';
+                document.getElementById('admin-coupon-type').value = coupon.type || 'porcentaje';
+                document.getElementById('admin-coupon-value').value = Number(coupon.value || 0);
+                document.getElementById('admin-coupon-minimum').value = Number(coupon.minimum || 0);
+                document.getElementById('admin-coupon-expires').value = coupon.expires || '';
+                document.getElementById('admin-coupon-active').value = coupon.active ? 'true' : 'false';
+            } else {
+                title.textContent = 'Agregar cupón';
+            }
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => document.getElementById('admin-coupon-code')?.focus(), 100);
+        }
+
+        function closeAdminCouponModal() {
+            document.getElementById('admin-coupon-modal')?.classList.add('hidden');
+            if (document.getElementById('admin-product-modal')?.classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function getAdminCouponPayload() {
+            return {
+                codigo: String(document.getElementById('admin-coupon-code').value || '').trim().toUpperCase().replace(/\s+/g, ''),
+                tipo: document.getElementById('admin-coupon-type').value,
+                valor: document.getElementById('admin-coupon-value').value,
+                compraMinima: document.getElementById('admin-coupon-minimum').value || '0',
+                fechaVencimiento: document.getElementById('admin-coupon-expires').value,
+                activo: document.getElementById('admin-coupon-active').value
+            };
+        }
+
+        async function saveAdminCoupon(event) {
+            event.preventDefault();
+            const row = document.getElementById('admin-coupon-row').value;
+            const payload = getAdminCouponPayload();
+            const action = row ? 'updateCoupon' : 'addCoupon';
+            const button = document.getElementById('admin-coupon-save-btn');
+            const errorBox = document.getElementById('admin-coupon-save-error');
+            errorBox?.classList.add('hidden');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+            try {
+                await adminRequest(action, row ? { ...payload, row } : payload);
+                closeAdminCouponModal();
+                await loadAdminCoupons();
+                showToast(row ? 'Cupón actualizado 🎟️' : 'Cupón creado 🎟️');
+            } catch (error) {
+                if (errorBox) {
+                    errorBox.textContent = error.message;
+                    errorBox.classList.remove('hidden');
+                }
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-ticket-alt mr-2"></i>Guardar cupón';
+            }
+        }
+
+        async function deleteAdminCoupon(row) {
+            const coupon = adminCoupons.find(c => Number(c.row) === Number(row));
+            if (!coupon) return;
+            if (!confirm(`¿Eliminar el cupón "${coupon.code}"?`)) return;
+            try {
+                await adminRequest('deleteCoupon', { row });
+                await loadAdminCoupons();
+                if (appliedCoupon?.code === coupon.code) removeCoupon(true);
+                showToast('Cupón eliminado');
             } catch (error) {
                 showToast(error.message);
             }
