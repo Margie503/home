@@ -489,120 +489,155 @@
         }
 
 
-        /* Cursor de llamita */
+        /* Cursor de vela encendida */
         #fire-cursor {
             position: fixed;
             left: 0;
             top: 0;
-            width: 28px;
-            height: 36px;
+            width: 34px;
+            height: 48px;
             pointer-events: none;
             z-index: 99999;
             opacity: 0;
             transform: translate(-50%, -50%);
-            transition: opacity .25s ease, filter .25s ease;
+            transition: opacity .22s ease, filter .25s ease;
             will-change: transform, opacity;
-            filter: drop-shadow(0 0 10px rgba(255, 156, 44, .28));
+            filter: drop-shadow(0 4px 7px rgba(44,35,31,.22));
         }
         #fire-cursor.is-visible { opacity: 1; }
-        #fire-cursor .cursor-glow {
-            position: absolute;
-            inset: auto;
-            width: 22px;
-            height: 22px;
-            left: 50%;
-            bottom: 1px;
-            transform: translateX(-50%);
-            border-radius: 999px;
-            background: radial-gradient(circle, rgba(255, 214, 120, .75) 0%, rgba(255, 153, 51, .36) 48%, rgba(255, 102, 0, 0) 72%);
-            animation: fireCursorGlow 1.4s ease-in-out infinite;
-        }
-        #fire-cursor .cursor-flame {
+        #fire-cursor .cursor-candle-glow {
             position: absolute;
             left: 50%;
-            bottom: 6px;
-            width: 18px;
-            height: 24px;
+            top: 2px;
+            width: 30px;
+            height: 30px;
             transform: translateX(-50%);
-            border-radius: 55% 55% 65% 65% / 50% 50% 85% 85%;
-            background: radial-gradient(circle at 50% 78%, #fff9e8 0 16%, #ffd36f 17% 34%, #ff9834 35% 62%, #ff611d 63% 82%, rgba(255,97,29,.12) 83% 100%);
-            box-shadow: 0 0 16px rgba(255, 138, 40, .36);
-            animation: fireCursorFlicker .82s ease-in-out infinite alternate;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,230,161,.82) 0%, rgba(255,181,76,.38) 45%, rgba(255,130,35,0) 72%);
+            animation: candleCursorGlow 1.55s ease-in-out infinite;
         }
-        #fire-cursor .cursor-flame::before {
+        #fire-cursor .cursor-candle-flame {
+            position: absolute;
+            left: 50%;
+            top: 2px;
+            width: 15px;
+            height: 21px;
+            transform: translateX(-50%);
+            border-radius: 58% 58% 66% 66% / 48% 48% 86% 86%;
+            background: radial-gradient(circle at 50% 77%, #fffdf0 0 18%, #ffe18a 19% 38%, #ffad42 39% 63%, #ff6c24 64% 84%, rgba(255,108,36,.08) 85% 100%);
+            box-shadow: 0 0 10px rgba(255,146,49,.5), 0 0 20px rgba(255,146,49,.25);
+            transform-origin: 50% 100%;
+            animation: candleCursorFlame .76s ease-in-out infinite alternate;
+        }
+        #fire-cursor .cursor-candle-flame::before {
             content: '';
             position: absolute;
             left: 50%;
             bottom: 4px;
-            width: 9px;
-            height: 13px;
+            width: 7px;
+            height: 11px;
             transform: translateX(-50%);
-            border-radius: 60% 60% 70% 70% / 45% 45% 85% 85%;
-            background: radial-gradient(circle at 50% 78%, #fffef7 0 28%, #ffe48f 29% 62%, rgba(255,228,143,0) 63% 100%);
-            opacity: .96;
+            border-radius: 60% 60% 70% 70%;
+            background: linear-gradient(180deg,#fffef8 0%,#fff2bd 52%,rgba(255,242,189,.2) 100%);
         }
-        #fire-cursor .cursor-flame::after {
-            content: '';
+        #fire-cursor .cursor-candle-wick {
             position: absolute;
             left: 50%;
-            top: -4px;
-            width: 10px;
-            height: 10px;
-            transform: translateX(-50%) rotate(45deg);
-            border-radius: 2px;
-            background: linear-gradient(135deg, #fff4c7, #ff8b2b);
-            filter: blur(.2px);
-        }
-        #fire-cursor .cursor-wick {
-            position: absolute;
-            left: 50%;
-            bottom: 0;
-            width: 3px;
-            height: 7px;
+            top: 20px;
+            width: 2px;
+            height: 8px;
             transform: translateX(-50%);
             border-radius: 999px;
-            background: linear-gradient(180deg, #6a4a32, #2a1c14);
-            opacity: .9;
+            background: linear-gradient(180deg,#6c4e3f,#261b16);
+            z-index: 2;
+        }
+        #fire-cursor .cursor-candle-body {
+            position: absolute;
+            left: 50%;
+            bottom: 2px;
+            width: 25px;
+            height: 25px;
+            transform: translateX(-50%);
+            border-radius: 6px 6px 9px 9px;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.42), rgba(255,255,255,0) 28%),
+                linear-gradient(180deg, #fffaf0 0%, #f4e6d3 62%, #e8d3b9 100%);
+            border: 1px solid rgba(200,169,126,.5);
+            box-shadow: inset -4px 0 8px rgba(164,124,88,.12), 0 4px 8px rgba(74,59,50,.16);
+            overflow: hidden;
+        }
+        #fire-cursor .cursor-candle-body::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -1px;
+            right: -1px;
+            height: 7px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, #fffdf8 0%, #f6e8d4 72%, #ddc6a8 100%);
+            border-bottom: 1px solid rgba(177,141,103,.25);
+        }
+        #fire-cursor .cursor-candle-body::after {
+            content: 'M';
+            position: absolute;
+            left: 50%;
+            bottom: 5px;
+            transform: translateX(-50%);
+            font-family: 'Playfair Display', serif;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            color: #8a6b4d;
+            opacity: .88;
+        }
+        #fire-cursor .cursor-candle-drip {
+            position: absolute;
+            left: 8px;
+            top: 24px;
+            width: 4px;
+            height: 8px;
+            border-radius: 0 0 999px 999px;
+            background: #fff7e8;
+            box-shadow: 7px 2px 0 -1px #f7ead7;
+            z-index: 3;
         }
         #fire-cursor .cursor-spark {
             position: absolute;
-            width: 4px;
-            height: 4px;
+            width: 3px;
+            height: 3px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 250, 214, .95) 0%, rgba(255, 176, 59, .95) 42%, rgba(255, 106, 0, 0) 80%);
+            background: radial-gradient(circle, #fffbdc 0%, #ffbe59 45%, rgba(255,126,23,0) 80%);
             opacity: .95;
-            animation: fireCursorSpark 1.15s linear infinite;
+            animation: candleCursorSpark 1.2s linear infinite;
         }
-        #fire-cursor .cursor-spark.s1 { left: 6px; bottom: 12px; animation-delay: 0s; }
-        #fire-cursor .cursor-spark.s2 { right: 5px; bottom: 14px; animation-delay: .26s; }
-        #fire-cursor .cursor-spark.s3 { left: 50%; bottom: 18px; margin-left: 8px; animation-delay: .52s; }
+        #fire-cursor .cursor-spark.s1 { left: 5px; top: 13px; animation-delay: 0s; }
+        #fire-cursor .cursor-spark.s2 { right: 5px; top: 15px; animation-delay: .32s; }
+        #fire-cursor .cursor-spark.s3 { left: 50%; top: 10px; margin-left: 7px; animation-delay: .58s; }
         #fire-cursor.is-hovering {
-            filter: drop-shadow(0 0 14px rgba(255, 181, 76, .42));
+            filter: drop-shadow(0 5px 8px rgba(44,35,31,.25)) drop-shadow(0 0 8px rgba(255,172,71,.2));
         }
-        #fire-cursor.is-hovering .cursor-flame {
-            animation-duration: .58s;
-            transform: translateX(-50%) scale(1.14);
+        #fire-cursor.is-hovering .cursor-candle-flame {
+            animation-duration: .52s;
+            transform: translateX(-50%) scale(1.16);
         }
-        #fire-cursor.is-pressed .cursor-flame {
-            transform: translateX(-50%) scale(.92);
-            filter: saturate(1.15);
+        #fire-cursor.is-hovering .cursor-candle-glow { transform: translateX(-50%) scale(1.15); }
+        #fire-cursor.is-pressed .cursor-candle-body { transform: translateX(-50%) scale(.94); }
+        #fire-cursor.is-pressed .cursor-candle-flame { transform: translateX(-50%) scale(.9); }
+        #fire-cursor.is-text { opacity: .2 !important; }
+
+        @keyframes candleCursorFlame {
+            0% { transform: translateX(-50%) rotate(-2deg) scale(.96,1.03); }
+            50% { transform: translateX(-50%) rotate(1deg) scale(1.05,.98); }
+            100% { transform: translateX(-50%) rotate(2deg) scale(.99,1.08); }
         }
-        #fire-cursor.is-text {
-            opacity: .18 !important;
+        @keyframes candleCursorGlow {
+            0%,100% { transform: translateX(-50%) scale(.88); opacity:.58; }
+            50% { transform: translateX(-50%) scale(1.08); opacity:.9; }
         }
-        @keyframes fireCursorFlicker {
-            0% { transform: translateX(-50%) scale(.96, 1.04) rotate(-2deg); border-radius: 52% 58% 62% 68% / 54% 48% 88% 82%; }
-            50% { transform: translateX(-50%) scale(1.05, .96) rotate(1deg); border-radius: 58% 52% 68% 62% / 46% 54% 82% 88%; }
-            100% { transform: translateX(-50%) scale(.98, 1.08) rotate(2deg); border-radius: 54% 60% 65% 70% / 48% 52% 86% 88%; }
-        }
-        @keyframes fireCursorGlow {
-            0%,100% { transform: translateX(-50%) scale(.88); opacity: .62; }
-            50% { transform: translateX(-50%) scale(1.12); opacity: .95; }
-        }
-        @keyframes fireCursorSpark {
-            0% { transform: translateY(0) scale(.65); opacity: 0; }
-            12% { opacity: 1; }
-            100% { transform: translateY(-18px) translateX(5px) scale(1.2); opacity: 0; }
+        @keyframes candleCursorSpark {
+            0% { transform: translateY(0) scale(.6); opacity:0; }
+            15% { opacity:1; }
+            100% { transform: translateY(-18px) translateX(4px) scale(1.15); opacity:0; }
         }
 
         @media (hover:hover) and (pointer:fine) {
@@ -631,9 +666,11 @@
 <body class="font-sans antialiased flex flex-col min-h-screen">
 
     <div id="fire-cursor" aria-hidden="true">
-        <span class="cursor-glow"></span>
-        <span class="cursor-flame"></span>
-        <span class="cursor-wick"></span>
+        <span class="cursor-candle-glow"></span>
+        <span class="cursor-candle-flame"></span>
+        <span class="cursor-candle-wick"></span>
+        <span class="cursor-candle-body"></span>
+        <span class="cursor-candle-drip"></span>
         <span class="cursor-spark s1"></span>
         <span class="cursor-spark s2"></span>
         <span class="cursor-spark s3"></span>
