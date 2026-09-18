@@ -206,7 +206,143 @@
         #navbar { border-bottom:1px solid transparent; }
         #navbar.nav-scrolled { background:rgba(253,251,247,.88); border-bottom-color:rgba(200,169,126,.22); box-shadow:0 10px 34px rgba(74,59,50,.08); }
 
-        /* Respeta accesibilidad y evita exceso de movimiento */
+
+
+        /* =====================================================
+           MARGIE MOTION+ — capa extra de animaciones
+           Solo efectos visuales; no cambia la lógica del sitio
+           ===================================================== */
+        @keyframes goldSweep {
+            0% { background-position: 180% 50%; }
+            100% { background-position: -80% 50%; }
+        }
+        @keyframes lineDraw {
+            from { transform: scaleX(0); opacity: 0; }
+            to { transform: scaleX(1); opacity: 1; }
+        }
+        @keyframes cardEntrance {
+            from { opacity:0; transform:translateY(28px) scale(.97); filter:blur(4px); }
+            to { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+        }
+        @keyframes iconPop {
+            0%,100% { transform:translateY(0) scale(1); }
+            45% { transform:translateY(-4px) scale(1.14); }
+        }
+        @keyframes badgePop {
+            0% { transform:scale(1); }
+            45% { transform:scale(1.42) rotate(-7deg); }
+            100% { transform:scale(1); }
+        }
+        @keyframes whatsappBreathe {
+            0%,100% { transform:translateY(0) scale(1); box-shadow:0 9px 25px rgba(34,197,94,.28); }
+            50% { transform:translateY(-4px) scale(1.035); box-shadow:0 14px 34px rgba(34,197,94,.38); }
+        }
+        @keyframes ambientGlow {
+            0%,100% { opacity:.32; transform:scale(.92); }
+            50% { opacity:.62; transform:scale(1.08); }
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform:translateY(20px) scale(.965); }
+            to { opacity:1; transform:translateY(0) scale(1); }
+        }
+        @keyframes successBounce {
+            0% { opacity:0; transform:scale(.4) rotate(-18deg); }
+            65% { opacity:1; transform:scale(1.13) rotate(4deg); }
+            100% { opacity:1; transform:scale(1) rotate(0); }
+        }
+        @keyframes fireflyFloat {
+            0% { transform:translate3d(0,12px,0) scale(.6); opacity:0; }
+            15% { opacity:.65; }
+            55% { opacity:.3; }
+            100% { transform:translate3d(var(--fx,18px),-90px,0) scale(.15); opacity:0; }
+        }
+        @keyframes progressGlow {
+            0%,100% { filter:drop-shadow(0 0 2px rgba(200,169,126,.15)); }
+            50% { filter:drop-shadow(0 0 7px rgba(200,169,126,.55)); }
+        }
+
+        /* Barra fina de progreso al hacer scroll */
+        #margie-scroll-progress {
+            position:fixed; top:0; left:0; height:2px; width:0; z-index:10001;
+            background:linear-gradient(90deg,#9f7f58,#C8A97E,#f2d3a7);
+            pointer-events:none; animation:progressGlow 2s ease-in-out infinite;
+            transition:width .08s linear;
+        }
+
+        /* Títulos con subrayado que se dibuja */
+        #view-home h2, #view-shop h1, #view-cart h1, #view-checkout h1,
+        #view-favorites h1, #view-admin h1 {
+            position:relative;
+        }
+        #view-home h2.margie-title-ready::after,
+        #view-shop h1.margie-title-ready::after,
+        #view-checkout h1.margie-title-ready::after,
+        #view-admin h1.margie-title-ready::after {
+            content:''; display:block; width:58px; height:2px; margin:12px auto 0;
+            transform-origin:center; transform:scaleX(0); opacity:0;
+            background:linear-gradient(90deg,transparent,#C8A97E,transparent);
+        }
+        #view-admin h1.margie-title-ready::after { margin-left:0; }
+        .margie-title-ready.margie-title-animate::after { animation:lineDraw .85s cubic-bezier(.2,.8,.2,1) forwards; }
+
+        /* Entrada escalonada para productos nuevos/renderizados */
+        .product-card.margie-card-enter { animation:cardEntrance .68s cubic-bezier(.2,.8,.2,1) both; }
+        #featured-products-container .product-card:nth-child(1), #shop-products-container .product-card:nth-child(1) { animation-delay:.02s; }
+        #featured-products-container .product-card:nth-child(2), #shop-products-container .product-card:nth-child(2) { animation-delay:.08s; }
+        #featured-products-container .product-card:nth-child(3), #shop-products-container .product-card:nth-child(3) { animation-delay:.14s; }
+        #featured-products-container .product-card:nth-child(4), #shop-products-container .product-card:nth-child(4) { animation-delay:.20s; }
+        #shop-products-container .product-card:nth-child(5) { animation-delay:.26s; }
+        #shop-products-container .product-card:nth-child(6) { animation-delay:.32s; }
+
+        /* Iconos de navegación con pequeño salto */
+        @media (hover:hover) and (pointer:fine) {
+            #navbar button:hover > i, #navbar a:hover > i, footer a:hover > i { animation:iconPop .48s ease; }
+        }
+        #cart-count.margie-badge-pop, #fav-count.margie-badge-pop { animation:badgePop .42s cubic-bezier(.2,.8,.2,1); }
+
+        /* Hero con profundidad ligera */
+        .margie-hero .hero-bg, .margie-hero .relative.z-10 { transition:transform .18s ease-out; }
+        .margie-hero::before {
+            content:''; position:absolute; inset:-18%; z-index:1; pointer-events:none;
+            background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(247,207,150,.13), transparent 20%);
+            opacity:.8; transition:background-position .2s ease;
+        }
+
+        /* Brillo ambiental en el banner social */
+        #view-home section .bg-brand-dark { position:relative; overflow:hidden; isolation:isolate; }
+        #view-home section .bg-brand-dark::before {
+            content:''; position:absolute; width:240px; height:240px; right:-80px; top:-100px; z-index:-1;
+            border-radius:50%; background:radial-gradient(circle,rgba(200,169,126,.32),rgba(200,169,126,0) 68%);
+            animation:ambientGlow 5.5s ease-in-out infinite;
+        }
+
+        /* Campos más vivos al enfocarse, solo visual */
+        input, select, textarea { transition:border-color .25s ease, box-shadow .25s ease, background-color .25s ease; }
+        input:focus, select:focus, textarea:focus { box-shadow:0 0 0 4px rgba(200,169,126,.10); }
+
+        /* Modales y confirmación */
+        #admin-product-modal:not(.hidden) > div > div { animation:modalIn .36s cubic-bezier(.2,.8,.2,1); }
+        #view-success.active .fa-check { animation:successBounce .65s cubic-bezier(.2,.8,.2,1) both; }
+
+        /* Ripple de clic */
+        .margie-ripple-host { position:relative; overflow:hidden; }
+        .margie-ripple-dot { position:absolute; border-radius:999px; pointer-events:none; background:rgba(255,255,255,.36); transform:translate(-50%,-50%) scale(0); animation:margieRipple .58s ease-out forwards; }
+        @keyframes margieRipple { to { transform:translate(-50%,-50%) scale(1); opacity:0; } }
+
+        /* Luciérnagas discretas del inicio */
+        #margie-fireflies { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1; }
+        #margie-fireflies i { position:absolute; bottom:-10px; width:3px; height:3px; border-radius:50%; background:#efc483; box-shadow:0 0 9px rgba(239,196,131,.9); opacity:0; animation:fireflyFloat var(--fd,5s) linear infinite; }
+
+        /* WhatsApp más orgánico */
+        #whatsapp-btn { animation:whatsappBreathe 3.1s ease-in-out infinite !important; }
+
+        /* Hover sutil del bloque de vela personalizada */
+        @media (hover:hover) and (pointer:fine) {
+            #custom-candle-form > div, #view-checkout form > div { transition:transform .25s ease; }
+            #custom-candle-form > div:hover { transform:translateY(-2px); }
+        }
+
+                /* Respeta accesibilidad y evita exceso de movimiento */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; }
             .margie-reveal,.margie-reveal-scale { opacity:1 !important; transform:none !important; filter:none !important; }
@@ -1125,6 +1261,7 @@
                     const cardHtml = createProductCardHTML(p);
                     return cardHtml.replace('product-card', `product-card animate-slide-up bg-white`);
                 }).join('');
+                requestAnimationFrame(animateCurrentProductCards);
             }
         }
 
@@ -1954,16 +2091,137 @@ const form = e.target;
             document.querySelectorAll('.margie-reveal,.margie-reveal-scale').forEach(el => observer.observe(el));
         }
 
-        // --- 7. INICIALIZACIÓN (Boot Async) ---
+
+
+        function setupMargieMotionPlus() {
+            // Barra de progreso de lectura
+            if (!document.getElementById('margie-scroll-progress')) {
+                const progress = document.createElement('div');
+                progress.id = 'margie-scroll-progress';
+                document.body.appendChild(progress);
+                const updateProgress = () => {
+                    const max = document.documentElement.scrollHeight - window.innerHeight;
+                    const pct = max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0;
+                    progress.style.width = pct + '%';
+                };
+                updateProgress();
+                window.addEventListener('scroll', updateProgress, { passive:true });
+                window.addEventListener('resize', updateProgress, { passive:true });
+            }
+
+            // Línea animada en títulos al entrar en pantalla
+            const titles = document.querySelectorAll('#view-home h2, #view-shop h1, #view-checkout h1, #view-admin h1');
+            titles.forEach(t => t.classList.add('margie-title-ready'));
+            if ('IntersectionObserver' in window) {
+                const titleObserver = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('margie-title-animate');
+                            titleObserver.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold:.5 });
+                titles.forEach(t => titleObserver.observe(t));
+            } else {
+                titles.forEach(t => t.classList.add('margie-title-animate'));
+            }
+
+            // Hero parallax muy suave solo en dispositivos con puntero fino
+            const hero = document.querySelector('.margie-hero');
+            if (hero && window.matchMedia('(hover:hover) and (pointer:fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const bg = hero.querySelector('.hero-bg');
+                const content = hero.querySelector('.relative.z-10');
+                hero.addEventListener('pointermove', (e) => {
+                    const r = hero.getBoundingClientRect();
+                    const x = (e.clientX - r.left) / r.width - .5;
+                    const y = (e.clientY - r.top) / r.height - .5;
+                    hero.style.setProperty('--mx', ((x + .5) * 100).toFixed(1) + '%');
+                    hero.style.setProperty('--my', ((y + .5) * 100).toFixed(1) + '%');
+                    if (bg) bg.style.transform = `scale(1.085) translate(${(-x*8).toFixed(1)}px, ${(-y*7).toFixed(1)}px)`;
+                    if (content) content.style.transform = `translate(${(x*7).toFixed(1)}px, ${(y*5).toFixed(1)}px)`;
+                });
+                hero.addEventListener('pointerleave', () => {
+                    if (bg) bg.style.transform = '';
+                    if (content) content.style.transform = '';
+                    hero.style.setProperty('--mx','50%');
+                    hero.style.setProperty('--my','50%');
+                });
+            }
+
+            // Luciérnagas decorativas en el hero
+            if (hero && !document.getElementById('margie-fireflies') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const flies = document.createElement('div');
+                flies.id = 'margie-fireflies';
+                const positions = [8,17,28,41,54,66,77,88,95];
+                positions.forEach((left, i) => {
+                    const f = document.createElement('i');
+                    f.style.left = left + '%';
+                    f.style.setProperty('--fx', ((i%2 ? -1 : 1) * (10 + (i*3)%24)) + 'px');
+                    f.style.setProperty('--fd', (4.6 + (i%4)*.65) + 's');
+                    f.style.animationDelay = (i*.58) + 's';
+                    flies.appendChild(f);
+                });
+                hero.appendChild(flies);
+            }
+
+            // Ripple en botones y enlaces con aspecto de botón
+            const rippleTargets = document.querySelectorAll('button, a.bg-brand-gold, #whatsapp-btn');
+            rippleTargets.forEach(el => {
+                if (el.dataset.margieRippleReady) return;
+                el.dataset.margieRippleReady = '1';
+                el.classList.add('margie-ripple-host');
+                el.addEventListener('pointerdown', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const dot = document.createElement('span');
+                    dot.className = 'margie-ripple-dot';
+                    const size = Math.max(rect.width, rect.height) * 2.1;
+                    dot.style.width = dot.style.height = size + 'px';
+                    dot.style.left = (e.clientX - rect.left) + 'px';
+                    dot.style.top = (e.clientY - rect.top) + 'px';
+                    el.appendChild(dot);
+                    dot.addEventListener('animationend', () => dot.remove(), { once:true });
+                });
+            });
+
+            // Pop cuando cambian carrito y favoritos
+            ['cart-count','fav-count'].forEach(id => {
+                const badge = document.getElementById(id);
+                if (!badge || badge.dataset.margieObserved) return;
+                badge.dataset.margieObserved = '1';
+                let first = true;
+                const mo = new MutationObserver(() => {
+                    if (first) { first = false; return; }
+                    badge.classList.remove('margie-badge-pop');
+                    void badge.offsetWidth;
+                    badge.classList.add('margie-badge-pop');
+                });
+                mo.observe(badge, { childList:true, characterData:true, subtree:true });
+            });
+
+            animateCurrentProductCards();
+        }
+
+        function animateCurrentProductCards() {
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.classList.remove('margie-card-enter');
+                void card.offsetWidth;
+                card.classList.add('margie-card-enter');
+            });
+        }
+
+
+                // --- 7. INICIALIZACIÓN (Boot Async) ---
         document.addEventListener('DOMContentLoaded', () => {
             // Iniciar extracción de datos
             setupCustomDeliveryDate();
             setupCustomCandlePreview();
             setupMargieAnimations();
+            setupMargieMotionPlus();
             cargarProductosDesdeGoogle().then(() => {
                 // Cuando termine, armamos el sitio
                 setupFilters();
                 renderHome();
+                animateCurrentProductCards();
                 updateUI();
                 
                 // Retirar pantalla de carga suavemente
