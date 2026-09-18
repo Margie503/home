@@ -1397,8 +1397,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div><label class="block text-sm font-semibold text-brand-brown mb-2">Nombre *</label><input id="admin-name" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold"></div>
                             <div><label class="block text-sm font-semibold text-brand-brown mb-2">Categoría *</label><input id="admin-category" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="hogar, evento, navideña..."></div>
-                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio *</label><input id="admin-price" type="number" min="0" step="0.01" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold"></div>
-                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio original</label><input id="admin-old-price" type="number" min="0" step="0.01" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="Opcional"></div>
+                            <div class="md:col-span-2 rounded-xl border border-brand-gold/30 bg-brand-light/60 p-4">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-tags text-brand-gold mt-0.5"></i>
+                                    <div>
+                                        <p class="text-sm font-semibold text-brand-brown">Precio según tamaño</p>
+                                        <p class="text-xs text-gray-500 mt-1">Asigna un precio distinto a Pequeño, Mediano y Grande. Solo necesitas llenar los tamaños que ofrece este producto.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio pequeño</label><input id="admin-price" type="number" min="0" step="0.01" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="Ej: 5.00"></div>
+                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio mediano</label><input id="admin-price-medium" type="number" min="0" step="0.01" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="Ej: 7.00"></div>
+                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio grande</label><input id="admin-price-large" type="number" min="0" step="0.01" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="Ej: 10.00"></div>
+                            <div><label class="block text-sm font-semibold text-brand-brown mb-2">Precio original / antes</label><input id="admin-old-price" type="number" min="0" step="0.01" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="Opcional"></div>
                             <div class="md:col-span-2"><label class="block text-sm font-semibold text-brand-brown mb-2">Descripción *</label><textarea id="admin-description" required rows="3" class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold"></textarea></div>
                             <div><label class="block text-sm font-semibold text-brand-brown mb-2">Aroma principal *</label><input id="admin-aroma" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="vanilla,coco,menta"><p class="text-xs text-gray-400 mt-1">Separa varias opciones con comas.</p></div>
                             <div><label class="block text-sm font-semibold text-brand-brown mb-2">Tamaño *</label><input id="admin-size" required class="w-full p-3 border border-brand-beige rounded-lg focus:outline-none focus:border-brand-gold" placeholder="pequeño,mediano,grande"><p class="text-xs text-gray-400 mt-1">Separa varias opciones con comas.</p></div>
@@ -1560,6 +1571,9 @@
                             sheetRow: index + 2,
                             name: item.nombre,
                             price: parseFloat(item.precio),
+                            priceSmall: item.precio !== '' && item.precio != null ? parseFloat(item.precio) : null,
+                            priceMedium: item['precio mediano'] !== '' && item['precio mediano'] != null ? parseFloat(item['precio mediano']) : null,
+                            priceLarge: item['precio grande'] !== '' && item['precio grande'] != null ? parseFloat(item['precio grande']) : null,
                             oldPrice: item['precio original'] ? parseFloat(item['precio original']) : null,
                             category: item.categoria,
                             aroma: item['aroma principal'],
@@ -1577,7 +1591,14 @@
                             isNew: false,
                             image: item['imagen (link)'],
                             desc: item.descripcion
-                        })).filter(p => !isNaN(p.price));
+                        })).filter(p => {
+                            const candidates = [p.priceSmall, p.priceMedium, p.priceLarge];
+                            return candidates.some(v => v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)));
+                        }).map(p => {
+                            const defaultSize = getProductSizes(p)[0] || '';
+                            p.price = getProductPriceForSize(p, defaultSize);
+                            return p;
+                        });
                         resolve();
                     },
                     error: function(error) {
@@ -1651,6 +1672,105 @@
                 .filter(Boolean);
         }
 
+
+        function normalizeSizeKey(size) {
+            return String(size || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function getDefaultProductSize(product) {
+            return getProductSizes(product)[0] || '';
+        }
+
+        function parseOptionalPrice(value) {
+            if (value === null || value === undefined || value === '') return NaN;
+            const number = Number(value);
+            return Number.isFinite(number) ? number : NaN;
+        }
+
+        function getProductPriceForSize(product, size = '') {
+            if (!product) return 0;
+            const key = normalizeSizeKey(size || getDefaultProductSize(product));
+            const base = parseOptionalPrice(product.priceSmall ?? product.price);
+            const medium = parseOptionalPrice(product.priceMedium);
+            const large = parseOptionalPrice(product.priceLarge);
+
+            if (key.includes('pequen') && Number.isFinite(base)) return base;
+            if (key.includes('median') && Number.isFinite(medium)) return medium;
+            if (key.includes('grande') && Number.isFinite(large)) return large;
+
+            const fallback = [base, medium, large].find(v => Number.isFinite(v));
+            return Number.isFinite(fallback) ? fallback : 0;
+        }
+
+        function getProductPriceEntries(product) {
+            const sizes = getProductSizes(product);
+            const source = sizes.length ? sizes : [''];
+            return source.map(size => ({ size, price: getProductPriceForSize(product, size) }))
+                .filter(entry => Number.isFinite(entry.price));
+        }
+
+        function getProductMinPrice(product) {
+            const prices = getProductPriceEntries(product).map(entry => entry.price);
+            return prices.length ? Math.min(...prices) : Number(product?.price || 0);
+        }
+
+        function getProductMaxPrice(product) {
+            const prices = getProductPriceEntries(product).map(entry => entry.price);
+            return prices.length ? Math.max(...prices) : Number(product?.price || 0);
+        }
+
+        function formatProductPriceDisplay(product) {
+            const min = getProductMinPrice(product);
+            const max = getProductMaxPrice(product);
+            return Math.abs(max - min) > 0.001 ? `Desde $${min.toFixed(2)}` : `$${min.toFixed(2)}`;
+        }
+
+        function getProductOldPriceForSize(product, size = '') {
+            const old = Number(product?.oldPrice);
+            if (!Number.isFinite(old) || old <= 0) return null;
+            const key = normalizeSizeKey(size || getDefaultProductSize(product));
+            const sizes = getProductSizes(product);
+            if (sizes.length <= 1 || key.includes('pequen')) return old;
+            return null;
+        }
+
+        function getSizeOptionLabel(product, size) {
+            const price = getProductPriceForSize(product, size);
+            return `${size} — $${price.toFixed(2)}`;
+        }
+
+        function updateProductCardPrice(productId, size) {
+            const product = productos.find(p => p.id === productId);
+            if (!product) return;
+            const price = getProductPriceForSize(product, size);
+            const oldPrice = getProductOldPriceForSize(product, size);
+            const priceEl = document.getElementById(`price-card-${productId}`);
+            const oldEl = document.getElementById(`old-price-card-${productId}`);
+            if (priceEl) priceEl.textContent = `$${price.toFixed(2)}`;
+            if (oldEl) {
+                oldEl.textContent = oldPrice && oldPrice > price ? `$${oldPrice.toFixed(2)}` : '';
+                oldEl.classList.toggle('hidden', !(oldPrice && oldPrice > price));
+            }
+        }
+
+        function updateProductDetailPrice(size) {
+            const product = state.currentProduct;
+            if (!product) return;
+            const price = getProductPriceForSize(product, size);
+            const oldPrice = getProductOldPriceForSize(product, size);
+            const priceEl = document.getElementById('detail-current-price');
+            const oldEl = document.getElementById('detail-old-price');
+            if (priceEl) priceEl.textContent = `$${price.toFixed(2)}`;
+            if (oldEl) {
+                oldEl.textContent = oldPrice && oldPrice > price ? `$${oldPrice.toFixed(2)}` : '';
+                oldEl.classList.toggle('hidden', !(oldPrice && oldPrice > price));
+            }
+        }
+
         function getProductAromas(product) {
             if (Array.isArray(product.aromas) && product.aromas.length) return product.aromas;
             return String(product.aroma || '')
@@ -1679,9 +1799,13 @@
         }
 
         function createProductCardHTML(product) {
-            const hasOffer = product.oldPrice !== null && !isNaN(product.oldPrice);
-            const discount = hasOffer ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
+            const defaultSize = getDefaultProductSize(product);
+            const defaultPrice = getProductPriceForSize(product, defaultSize);
+            const defaultOldPrice = getProductOldPriceForSize(product, defaultSize);
+            const hasOffer = defaultOldPrice !== null && defaultOldPrice > defaultPrice;
+            const discount = hasOffer ? Math.round(((defaultOldPrice - defaultPrice) / defaultOldPrice) * 100) : 0;
             const isFav = state.favorites.includes(product.id);
+            const sizes = getProductSizes(product);
 
             return `
                 <div class="product-card bg-white rounded-lg shadow-sm border border-brand-beige overflow-hidden relative group">
@@ -1699,13 +1823,13 @@
                     <div class="p-5 text-center">
                         <span class="text-xs text-brand-gold uppercase tracking-widest mb-1 block">${product.category}</span>
                         <h3 class="font-serif text-lg text-brand-brown mb-2 cursor-pointer hover:text-brand-gold transition-colors line-clamp-1" onclick="navigate('product', {id: ${product.id}})">${product.name}</h3>
-                        <div class="flex justify-center items-center gap-2 mb-4 text-sm">
-                            ${hasOffer ? `<span class="text-gray-400 line-through">$${product.oldPrice.toFixed(2)}</span>` : ''}
-                            <span class="font-bold text-brand-brown text-lg">$${product.price.toFixed(2)}</span>
+                        <div class="flex justify-center items-center gap-2 mb-4 text-sm min-h-[28px]">
+                            <span id="old-price-card-${product.id}" class="text-gray-400 line-through ${hasOffer ? '' : 'hidden'}">${hasOffer ? `$${defaultOldPrice.toFixed(2)}` : ''}</span>
+                            <span id="price-card-${product.id}" class="font-bold text-brand-brown text-lg">${sizes.length > 1 ? formatProductPriceDisplay(product) : `$${defaultPrice.toFixed(2)}`}</span>
                         </div>
-                        ${getProductSizes(product).length > 1 ? `
-                            <select id="size-card-${product.id}" class="w-full mb-2 p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-brand-gold">
-                                ${getProductSizes(product).map(size => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join('')}
+                        ${sizes.length > 1 ? `
+                            <select id="size-card-${product.id}" onchange="updateProductCardPrice(${product.id}, this.value)" class="w-full mb-2 p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-brand-gold">
+                                ${sizes.map(size => `<option value="${escapeHtml(size)}">${escapeHtml(getSizeOptionLabel(product, size))}</option>`).join('')}
                             </select>
                         ` : ''}
                         ${getProductAromas(product).length > 1 ? `
@@ -1749,8 +1873,8 @@
                 return matchCat && matchQuery && matchOffer;
             });
 
-            if (state.shopFilters.sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
-            if (state.shopFilters.sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+            if (state.shopFilters.sort === 'price-asc') filtered.sort((a, b) => getProductMinPrice(a) - getProductMinPrice(b));
+            if (state.shopFilters.sort === 'price-desc') filtered.sort((a, b) => getProductMinPrice(b) - getProductMinPrice(a));
             if (state.shopFilters.sort === 'new') filtered.sort((a, b) => (a.isNew === b.isNew) ? 0 : a.isNew ? -1 : 1);
 
             if (filtered.length === 0) {
@@ -1772,8 +1896,11 @@
 
             const container = document.getElementById('product-detail-container');
             const isFav = state.favorites.includes(p.id);
-            const hasOffer = p.oldPrice !== null && !isNaN(p.oldPrice);
-            const discount = hasOffer ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+            const defaultSize = getDefaultProductSize(p);
+            const defaultPrice = getProductPriceForSize(p, defaultSize);
+            const defaultOldPrice = getProductOldPriceForSize(p, defaultSize);
+            const hasOffer = defaultOldPrice !== null && defaultOldPrice > defaultPrice;
+            const discount = hasOffer ? Math.round(((defaultOldPrice - defaultPrice) / defaultOldPrice) * 100) : 0;
 
             let starsHtml = '';
             for(let i=1; i<=5; i++) {
@@ -1802,8 +1929,8 @@
                         </div>
 
                         <div class="flex items-end gap-3 mb-8">
-                            <span class="font-bold text-brand-brown text-4xl">$${p.price.toFixed(2)}</span>
-                            ${hasOffer ? `<span class="text-gray-400 line-through text-xl mb-1">$${p.oldPrice.toFixed(2)}</span>` : ''}
+                            <span id="detail-current-price" class="font-bold text-brand-brown text-4xl">$${defaultPrice.toFixed(2)}</span>
+                            <span id="detail-old-price" class="text-gray-400 line-through text-xl mb-1 ${hasOffer ? '' : 'hidden'}">${hasOffer ? `$${defaultOldPrice.toFixed(2)}` : ''}</span>
                         </div>
 
                         <p class="text-gray-600 mb-8 leading-relaxed">${p.desc}</p>
@@ -1822,8 +1949,8 @@
                             <div>
                                 <span class="block text-xs text-gray-400 uppercase mb-1">Tamaño</span>
                                 ${getProductSizes(p).length > 1 ? `
-                                    <select id="detail-size" class="w-full p-2 border border-gray-200 rounded bg-white text-brand-brown text-sm focus:outline-none focus:border-brand-gold">
-                                        ${getProductSizes(p).map(size => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join('')}
+                                    <select id="detail-size" onchange="updateProductDetailPrice(this.value)" class="w-full p-2 border border-gray-200 rounded bg-white text-brand-brown text-sm focus:outline-none focus:border-brand-gold">
+                                        ${getProductSizes(p).map(size => `<option value="${escapeHtml(size)}">${escapeHtml(getSizeOptionLabel(p, size))}</option>`).join('')}
                                     </select>
                                 ` : `
                                     <span class="text-brand-brown font-semibold text-sm">${escapeHtml(getProductSizes(p)[0] || 'Sin especificar')}</span>
@@ -1859,7 +1986,7 @@
         function getCartSaleSubtotal() {
             return state.cart.reduce((sum, item) => {
                 const prod = productos.find(p => p.id === item.productId);
-                return prod ? sum + (Number(prod.price || 0) * Number(item.quantity || 0)) : sum;
+                return prod ? sum + (getProductPriceForSize(prod, item.size) * Number(item.quantity || 0)) : sum;
             }, 0);
         }
 
@@ -1993,20 +2120,22 @@
                     const prod = productos.find(p => p.id === item.productId);
                     if(!prod) return ''; // En caso de que se haya eliminado el producto de la base
                     
-                    const itemTotal = prod.price * item.quantity;
-                    const itemOriginalTotal = (prod.oldPrice && !isNaN(prod.oldPrice) ? prod.oldPrice : prod.price) * item.quantity;
+                    const itemPrice = getProductPriceForSize(prod, item.size);
+                    const itemOldPrice = getProductOldPriceForSize(prod, item.size);
+                    const itemTotal = itemPrice * item.quantity;
+                    const itemOriginalTotal = (itemOldPrice && itemOldPrice > itemPrice ? itemOldPrice : itemPrice) * item.quantity;
                     subtotal += itemTotal;
                     originalTotal += itemOriginalTotal;
 
                     return `
                         <div class="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-brand-beige relative animate-fade-in" style="animation-delay: ${index * 0.1}s">
-                            <button onclick="removeFromCart(${item.productId})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2"><i class="fas fa-times"></i></button>
+                            <button onclick="removeFromCart(${item.productId}, ${JSON.stringify(item.aroma || '')}, ${JSON.stringify(item.size || '')})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2"><i class="fas fa-times"></i></button>
                             <img src="${prod.image}" alt="${prod.name}" class="w-24 h-24 object-cover rounded">
                             <div class="flex-1 text-center sm:text-left">
                                 <h4 class="font-serif text-lg text-brand-brown">${prod.name}</h4>
                                 <p class="text-xs text-brand-gold mb-1">Tamaño: <strong>${escapeHtml(item.size || prod.size || '')}</strong></p>
                                 ${item.aroma ? `<p class="text-xs text-gray-500 mb-2">Aroma: <strong>${escapeHtml(item.aroma)}</strong></p>` : ''}
-                                <div class="font-bold text-brand-brown">$${prod.price.toFixed(2)}</div>
+                                <div class="font-bold text-brand-brown">$${itemPrice.toFixed(2)} <span class="text-[10px] text-gray-400 font-normal">c/u</span></div>
                             </div>
                             <div class="flex items-center border border-gray-300 rounded overflow-hidden">
                                 <button onclick="updateCartQty(${item.productId}, ${JSON.stringify(item.aroma || '')}, ${JSON.stringify(item.size || '')}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100">-</button>
@@ -2037,7 +2166,7 @@
         function updateCheckoutTotal() {
             const subtotal = state.cart.reduce((sum, item) => {
                 const prod = productos.find(p => p.id === item.productId);
-                return prod ? sum + (prod.price * item.quantity) : sum;
+                return prod ? sum + (getProductPriceForSize(prod, item.size) * item.quantity) : sum;
             }, 0);
 
             const shipping = getCheckoutShippingCost();
@@ -2369,9 +2498,10 @@ const form = e.target;
             state.cart.forEach(item => {
                 const p = productos.find(prod => prod.id === item.productId);
                 if (p) {
-                    const itemTotal = p.price * item.quantity;
+                    const unitPrice = getProductPriceForSize(p, item.size);
+                    const itemTotal = unitPrice * item.quantity;
                     subtotal += itemTotal;
-                    orderSummary += `• ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} ($${itemTotal.toFixed(2)})\n`;
+                    orderSummary += `• ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} — $${unitPrice.toFixed(2)} c/u ($${itemTotal.toFixed(2)})\n`;
                 }
             });
 
@@ -2534,7 +2664,7 @@ const form = e.target;
                 <tr class="hover:bg-brand-light/50">
                     <td class="p-4"><div class="flex items-center gap-3 min-w-[220px]"><img src="${escapeHtml(p.image || 'logo.png')}" onerror="this.src='logo.png'" alt="" class="w-12 h-12 rounded-lg object-cover bg-brand-light border border-brand-beige"><div><div class="font-semibold text-brand-brown">${escapeHtml(p.name || '')}</div><div class="text-xs text-gray-400">Fila ${p.sheetRow || '—'}</div></div></div></td>
                     <td class="p-4 text-gray-600">${escapeHtml(p.category || '')}</td>
-                    <td class="p-4 font-semibold text-brand-brown">$${Number(p.price || 0).toFixed(2)}</td>
+                    <td class="p-4 font-semibold text-brand-brown">${escapeHtml(formatProductPriceDisplay(p))}</td>
                     <td class="p-4 text-gray-600">${Number.isFinite(Number(p.stock)) ? Number(p.stock) : 0}</td>
                     <td class="p-4"><div class="flex justify-end gap-2 min-w-[160px]"><button onclick="openAdminProductModal(${p.id})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button onclick="deleteAdminProduct(${p.id})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
                 </tr>`).join('');
@@ -2556,7 +2686,9 @@ const form = e.target;
                 document.getElementById('admin-edit-row').value = p.sheetRow || '';
                 document.getElementById('admin-name').value = p.name || '';
                 document.getElementById('admin-category').value = p.category || '';
-                document.getElementById('admin-price').value = Number.isFinite(Number(p.price)) ? Number(p.price) : '';
+                document.getElementById('admin-price').value = Number.isFinite(Number(p.priceSmall ?? p.price)) ? Number(p.priceSmall ?? p.price) : '';
+                document.getElementById('admin-price-medium').value = Number.isFinite(p.priceMedium) ? p.priceMedium : '';
+                document.getElementById('admin-price-large').value = Number.isFinite(p.priceLarge) ? p.priceLarge : '';
                 document.getElementById('admin-old-price').value = (p.oldPrice !== null && Number.isFinite(Number(p.oldPrice))) ? Number(p.oldPrice) : '';
                 document.getElementById('admin-description').value = p.desc || '';
                 document.getElementById('admin-aroma').value = p.aroma || '';
@@ -2581,6 +2713,8 @@ const form = e.target;
                 nombre: document.getElementById('admin-name').value.trim(),
                 categoria: document.getElementById('admin-category').value.trim(),
                 precio: document.getElementById('admin-price').value,
+                precioMediano: document.getElementById('admin-price-medium').value,
+                precioGrande: document.getElementById('admin-price-large').value,
                 precioOriginal: document.getElementById('admin-old-price').value,
                 descripcion: document.getElementById('admin-description').value.trim(),
                 aromaPrincipal: document.getElementById('admin-aroma').value.trim(),
@@ -2594,7 +2728,37 @@ const form = e.target;
             const aromas = String(payload.aromaPrincipal || '').split(',').map(v => v.trim()).filter(Boolean);
             const sizes = String(payload.tamano || '').split(',').map(v => v.trim()).filter(Boolean);
             const oldPrice = payload.precioOriginal === '' ? null : Number(payload.precioOriginal);
-            return { id, sheetRow: Number(row), name: payload.nombre, price: Number(payload.precio), oldPrice: Number.isFinite(oldPrice) ? oldPrice : null, category: payload.categoria, aroma: payload.aromaPrincipal, aromas, size: payload.tamano, sizes, stock: Number(payload.stock), rating: 5, isNew: false, image: payload.imagen, desc: payload.descripcion };
+            const small = payload.precio === '' ? null : Number(payload.precio);
+            const medium = payload.precioMediano === '' ? null : Number(payload.precioMediano);
+            const large = payload.precioGrande === '' ? null : Number(payload.precioGrande);
+            const available = sizes.map(size => {
+                const key = normalizeSizeKey(size);
+                if (key.includes('pequen')) return small;
+                if (key.includes('median')) return medium;
+                if (key.includes('grande')) return large;
+                return small ?? medium ?? large;
+            }).filter(Number.isFinite);
+            const basePrice = available.length ? available[0] : [small, medium, large].find(Number.isFinite) ?? 0;
+            return {
+                id,
+                sheetRow: Number(row),
+                name: payload.nombre,
+                price: basePrice,
+                priceSmall: Number.isFinite(small) ? small : null,
+                priceMedium: Number.isFinite(medium) ? medium : null,
+                priceLarge: Number.isFinite(large) ? large : null,
+                oldPrice: Number.isFinite(oldPrice) ? oldPrice : null,
+                category: payload.categoria,
+                aroma: payload.aromaPrincipal,
+                aromas,
+                size: payload.tamano,
+                sizes,
+                stock: Number(payload.stock),
+                rating: 5,
+                isNew: false,
+                image: payload.imagen,
+                desc: payload.descripcion
+            };
         }
 
         function refreshCategoryOptions() {
@@ -2627,6 +2791,16 @@ const form = e.target;
             const row = document.getElementById('admin-edit-row').value;
             const payload = getAdminFormPayload();
             const action = row ? 'update' : 'add';
+            const offeredSizes = String(payload.tamano || '').split(',').map(v => normalizeSizeKey(v)).filter(Boolean);
+            const missingPrices = [];
+            if (offeredSizes.some(v => v.includes('pequen')) && payload.precio === '') missingPrices.push('Pequeño');
+            if (offeredSizes.some(v => v.includes('median')) && payload.precioMediano === '') missingPrices.push('Mediano');
+            if (offeredSizes.some(v => v.includes('grande')) && payload.precioGrande === '') missingPrices.push('Grande');
+            if (missingPrices.length) {
+                errorBox.textContent = `Falta definir el precio para: ${missingPrices.join(', ')}.`;
+                errorBox.classList.remove('hidden');
+                return;
+            }
             errorBox.classList.add('hidden');
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
