@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MARGIE CANDLES | Velas Artesanales Premium</title>
     <link rel="icon" type="image/png" href="logo.png">
+
+    <!-- PWA / App instalable MARGIE CANDLES -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#2C231F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MARGIE">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="description" content="Descubre nuestra colección exclusiva de velas artesanales. Aromas únicos, diseño elegante y relajación absoluta para tus espacios.">
     
     <!-- Open Graph Básico -->
@@ -744,6 +753,142 @@
             .order-status-track::before { display:none; }
         }
 
+
+        /* =====================================================
+           APP MÓVIL / PWA + OPTIMIZACIÓN PARA PANTALLAS PEQUEÑAS
+           ===================================================== */
+        .mobile-install-card {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 9997;
+            max-width: 520px;
+            margin: 0 auto;
+            background: rgba(253,251,247,.97);
+            border: 1px solid rgba(200,169,126,.48);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: 0 18px 52px rgba(44,35,31,.20);
+            backdrop-filter: blur(14px);
+            transform: translateY(22px) scale(.98);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .28s ease, transform .34s cubic-bezier(.2,.8,.2,1), visibility .28s;
+        }
+        .mobile-install-card.is-visible { opacity:1; visibility:visible; transform:translateY(0) scale(1); }
+        .mobile-install-icon {
+            width:48px; height:48px; border-radius:14px; flex:0 0 auto;
+            background:linear-gradient(145deg,#2C231F,#4A3B32);
+            color:#e7c89e; display:flex; align-items:center; justify-content:center;
+            box-shadow: inset 0 0 0 1px rgba(200,169,126,.25);
+        }
+        .mobile-install-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+        .mobile-install-actions button { min-height:44px; border-radius:12px; padding:0 14px; font-size:13px; font-weight:700; }
+        .mobile-install-primary { background:#C8A97E; color:white; flex:1 1 145px; }
+        .mobile-install-secondary { border:1px solid #E8DCCE; color:#4A3B32; background:transparent; flex:1 1 105px; }
+        .mobile-install-help {
+            display:none; margin-top:12px; padding:12px; border-radius:13px;
+            background:#F4EBE1; color:#5c4c42; font-size:12px; line-height:1.55; text-align:left;
+        }
+        .mobile-install-help.is-open { display:block; animation:fadeIn .25s ease both; }
+        body.install-prompt-visible #whatsapp-btn { bottom: 178px !important; }
+        html.dark-mode .mobile-install-card { background:rgba(31,24,20,.97); border-color:#544033; }
+        html.dark-mode .mobile-install-secondary { color:#eadfd5; border-color:#544033; }
+        html.dark-mode .mobile-install-help { background:#2b211c; color:#d7c8bc; }
+
+        /* Mejoras táctiles: no dependen de hover */
+        @media (max-width: 767px) {
+            body { -webkit-text-size-adjust:100%; }
+            button, a, select, input[type="button"], input[type="submit"] { min-height:44px; }
+            input, select, textarea { font-size:16px !important; }
+
+            /* Barra superior más limpia */
+            #navbar > div { padding-left:12px !important; padding-right:12px !important; }
+            #navbar .h-20 { height:68px !important; }
+            body > .h-20 { height:68px !important; }
+            #navbar img[alt="Logo"] { height:42px !important; }
+            #navbar h2 { font-size:18px !important; letter-spacing:.13em !important; }
+            #navbar .space-x-4 > :not([hidden]) ~ :not([hidden]) { margin-left:.72rem !important; }
+            #navbar [data-theme-toggle]:not(#mobile-menu [data-theme-toggle]),
+            #navbar button[title="Administrador"],
+            #navbar button[title="Buscar"] { display:none !important; }
+            #navbar button { padding:4px; }
+            #navbar button i { font-size:17px !important; }
+            #mobile-menu { max-height:calc(100vh - 68px); overflow:auto; box-shadow:0 14px 30px rgba(44,35,31,.10); }
+            #mobile-menu a, #mobile-menu button { padding-top:12px !important; padding-bottom:12px !important; }
+
+            /* Hero legible en teléfonos */
+            .margie-hero { min-height:560px !important; height:auto !important; padding:92px 18px 72px !important; }
+            .margie-hero h1 { font-size:clamp(2.5rem,13vw,4.25rem) !important; line-height:.96 !important; margin-bottom:20px !important; }
+            .margie-hero p { font-size:16px !important; line-height:1.65 !important; margin-bottom:28px !important; }
+            .margie-hero .flex.flex-col.sm\\:flex-row { width:100%; max-width:360px; margin-left:auto; margin-right:auto; }
+            .margie-hero button { width:100%; border-radius:12px !important; padding-top:14px !important; padding-bottom:14px !important; }
+
+            /* Secciones y tarjetas */
+            main .py-20 { padding-top:3.4rem !important; padding-bottom:3.4rem !important; }
+            main .py-10 { padding-top:2.2rem !important; padding-bottom:2.2rem !important; }
+            main .px-4 { padding-left:14px !important; padding-right:14px !important; }
+            .product-card { border-radius:18px !important; }
+            .product-img-wrapper { height:230px !important; }
+            .product-card .p-5 { padding:16px !important; }
+            #shop-products-container, #featured-products-container, #fav-products-container { gap:16px !important; }
+
+            /* Tienda: filtros menos pesados */
+            #view-shop aside .sticky { position:static !important; top:auto !important; }
+            #view-shop aside > div { border-radius:16px !important; }
+            #view-shop .flex.flex-col.lg\\:flex-row { gap:18px !important; }
+
+            /* Carrito */
+            #view-cart h1, #view-checkout h1, #view-favorites h1 { font-size:30px !important; }
+            #cart-items-container > div { align-items:stretch !important; padding:16px !important; border-radius:16px !important; }
+            #cart-items-container img { width:100% !important; height:180px !important; border-radius:13px !important; }
+            #cart-items-container .flex-1 { text-align:left !important; }
+            #cart-items-container .flex.items-center.border { align-self:flex-start; }
+            #cart-content > .w-full.lg\\:w-1\\/3 > div { position:static !important; }
+
+            /* Checkout y formularios */
+            #view-checkout > div.bg-white { padding:18px !important; border-radius:18px !important; }
+            #custom-candle-form, #checkout-form { width:100%; }
+            #custom-candle-form input, #custom-candle-form select, #custom-candle-form textarea,
+            #checkout-form input, #checkout-form select, #checkout-form textarea { min-height:48px; border-radius:12px !important; }
+            #custom-submit-btn, #checkout-form button[type="submit"] { min-height:54px; border-radius:14px !important; }
+
+            /* Mi cuenta y seguimiento */
+            #view-account { padding-left:14px !important; padding-right:14px !important; }
+            #view-account > .text-center.mb-10 { margin-bottom:24px !important; }
+            #view-account h1 { font-size:34px !important; }
+            #account-login-panel { padding:22px 17px !important; }
+            #account-dashboard > div:first-child { padding:20px 16px !important; }
+            #account-dashboard > div:first-child .flex.flex-wrap.justify-center.gap-2 { width:100%; }
+            #account-dashboard > div:first-child .flex.flex-wrap.justify-center.gap-2 button { flex:1 1 130px; }
+            .account-card { padding:17px !important; }
+            .order-status-track { overflow-x:auto; padding-bottom:8px; scroll-snap-type:x proximity; }
+            .order-status-step { min-width:88px; scroll-snap-align:start; }
+            .order-status-label { font-size:10px !important; }
+
+            /* Admin usable desde teléfono */
+            #view-admin { padding-left:12px !important; padding-right:12px !important; }
+            #view-admin table { min-width:720px; }
+            #admin-product-modal { padding:8px !important; }
+            #admin-product-modal form { padding:16px !important; }
+
+            /* Footer y WhatsApp */
+            footer { padding-top:3rem !important; }
+            #whatsapp-btn { width:52px !important; height:52px !important; right:14px !important; bottom:max(14px, env(safe-area-inset-bottom)) !important; font-size:25px !important; }
+            #toast-container { left:12px !important; right:12px !important; bottom:78px !important; }
+            #toast-container .toast { width:100%; }
+        }
+
+        @media (max-width: 390px) {
+            #navbar h2 { display:none !important; }
+            #navbar img[alt="Logo"] { height:44px !important; }
+            #navbar .space-x-4 > :not([hidden]) ~ :not([hidden]) { margin-left:.58rem !important; }
+            .margie-hero { padding-left:14px !important; padding-right:14px !important; }
+            .margie-hero h1 { font-size:2.65rem !important; }
+            .mobile-install-card { left:8px; right:8px; bottom:max(8px, env(safe-area-inset-bottom)); border-radius:17px; }
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
@@ -759,6 +904,29 @@
         <span class="cursor-spark s3"></span>
     </div>
 
+
+
+    <!-- Aviso de instalación para Android/iPhone -->
+    <aside id="mobile-install-card" class="mobile-install-card" aria-live="polite" aria-label="Instalar MARGIE CANDLES">
+        <div class="flex items-start gap-3">
+            <div class="mobile-install-icon"><i class="fas fa-fire-alt text-xl"></i></div>
+            <div class="min-w-0 flex-1 text-left">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-[.22em] text-brand-gold font-bold">MARGIE CANDLES</p>
+                        <h3 class="font-serif text-xl text-brand-brown mt-0.5">Instala nuestra app</h3>
+                    </div>
+                    <button type="button" onclick="dismissMobileInstallPrompt()" class="w-10 h-10 rounded-full text-gray-400 hover:text-brand-brown" aria-label="Cerrar aviso"><i class="fas fa-times"></i></button>
+                </div>
+                <p id="mobile-install-copy" class="text-xs text-gray-500 mt-1.5 leading-relaxed">Ten tu carrito, tus pedidos y su seguimiento siempre a mano.</p>
+                <div id="mobile-install-help" class="mobile-install-help"></div>
+                <div class="mobile-install-actions">
+                    <button id="mobile-install-primary" type="button" onclick="handleMobileInstall()" class="mobile-install-primary"><i class="fas fa-download mr-2"></i>Instalar app</button>
+                    <button type="button" onclick="dismissMobileInstallPrompt()" class="mobile-install-secondary">Ahora no</button>
+                </div>
+            </div>
+        </div>
+    </aside>
 
     <!-- Pantalla de carga inicial -->
     <div id="loader">
@@ -841,6 +1009,10 @@
                 <button type="button" data-theme-toggle onclick="toggleDarkMode()" class="theme-toggle-btn w-full px-3 py-2 text-brand-brown uppercase tracking-widest text-sm flex items-center justify-center gap-2">
                     <i class="fas fa-moon"></i><span class="mobile-theme-label">Modo oscuro</span>
                 </button>
+                <button type="button" onclick="showMobileInstallPrompt(true); toggleMobileMenu()" class="w-full px-3 py-2 text-brand-brown uppercase tracking-widest text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-mobile-alt text-brand-gold"></i><span>Instalar app</span>
+                </button>
+                <a href="#" onclick="navigate('admin'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm"><i class="fas fa-lock mr-2 text-brand-gold"></i>Administrador</a>
             </div>
         </div>
     </header>
@@ -3795,6 +3967,118 @@
 
 
 
+        // --- APP INSTALABLE (PWA) + AVISO EN ANDROID / IPHONE ---
+        let margieDeferredInstallPrompt = null;
+        const MARGIE_INSTALL_DISMISS_KEY = 'margie_install_dismissed_at';
+
+        function isMargieMobileDevice() {
+            const ua = navigator.userAgent || '';
+            return /Android|iPhone|iPad|iPod/i.test(ua) || (window.matchMedia && window.matchMedia('(max-width: 767px)').matches);
+        }
+
+        function isMargieIOS() {
+            return /iPhone|iPad|iPod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function isMargieStandalone() {
+            return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        function shouldShowInstallPrompt(force = false) {
+            if (!isMargieMobileDevice() || isMargieStandalone()) return false;
+            if (force) return true;
+            try {
+                const dismissedAt = Number(localStorage.getItem(MARGIE_INSTALL_DISMISS_KEY) || 0);
+                const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                return !dismissedAt || (Date.now() - dismissedAt) > sevenDays;
+            } catch (e) { return true; }
+        }
+
+        function updateMobileInstallContent() {
+            const primary = document.getElementById('mobile-install-primary');
+            const copy = document.getElementById('mobile-install-copy');
+            const help = document.getElementById('mobile-install-help');
+            if (!primary || !copy || !help) return;
+
+            if (isMargieIOS()) {
+                primary.innerHTML = '<i class="fas fa-share-square mr-2"></i>Cómo instalar';
+                copy.textContent = 'Instala MARGIE CANDLES en tu iPhone para abrirla como una app y entrar rápido a tus pedidos.';
+                help.innerHTML = '<strong>En iPhone:</strong> abre esta página en Safari, toca <strong>Compartir ⬆️</strong> y luego <strong>Agregar a pantalla de inicio</strong>.';
+            } else if (margieDeferredInstallPrompt) {
+                primary.innerHTML = '<i class="fas fa-download mr-2"></i>Instalar app';
+                copy.textContent = 'Instala MARGIE CANDLES en tu Android para tener acceso rápido a tu carrito y seguimiento.';
+                help.innerHTML = '<strong>Android:</strong> toca “Instalar app” y confirma la instalación cuando tu navegador lo solicite.';
+            } else {
+                primary.innerHTML = '<i class="fas fa-mobile-alt mr-2"></i>Cómo instalar';
+                copy.textContent = 'Puedes guardar MARGIE CANDLES como una app en la pantalla de inicio de tu teléfono.';
+                help.innerHTML = '<strong>Android:</strong> abre el menú de tu navegador ⋮ y busca <strong>Instalar app</strong> o <strong>Agregar a pantalla principal</strong>.';
+            }
+        }
+
+        function showMobileInstallPrompt(force = false) {
+            const card = document.getElementById('mobile-install-card');
+            if (!card || !shouldShowInstallPrompt(force)) return;
+            updateMobileInstallContent();
+            card.classList.add('is-visible');
+            document.body.classList.add('install-prompt-visible');
+        }
+
+        function dismissMobileInstallPrompt() {
+            const card = document.getElementById('mobile-install-card');
+            card?.classList.remove('is-visible');
+            document.body.classList.remove('install-prompt-visible');
+            try { localStorage.setItem(MARGIE_INSTALL_DISMISS_KEY, String(Date.now())); } catch (e) {}
+        }
+
+        async function handleMobileInstall() {
+            const help = document.getElementById('mobile-install-help');
+            if (isMargieIOS() || !margieDeferredInstallPrompt) {
+                help?.classList.toggle('is-open');
+                return;
+            }
+            try {
+                margieDeferredInstallPrompt.prompt();
+                const choice = await margieDeferredInstallPrompt.userChoice;
+                if (choice?.outcome === 'accepted') {
+                    dismissMobileInstallPrompt();
+                    if (typeof showToast === 'function') showToast('MARGIE CANDLES se está instalando 🕯️');
+                }
+            } catch (error) {
+                console.warn('No se pudo abrir el instalador:', error);
+                help?.classList.add('is-open');
+            } finally {
+                margieDeferredInstallPrompt = null;
+            }
+        }
+
+        function setupMargiePWA() {
+            window.addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                margieDeferredInstallPrompt = event;
+                updateMobileInstallContent();
+                if (shouldShowInstallPrompt(false)) setTimeout(() => showMobileInstallPrompt(false), 900);
+            });
+
+            window.addEventListener('appinstalled', () => {
+                margieDeferredInstallPrompt = null;
+                const card = document.getElementById('mobile-install-card');
+                card?.classList.remove('is-visible');
+                document.body.classList.remove('install-prompt-visible');
+                if (typeof showToast === 'function') showToast('¡MARGIE CANDLES ya está instalada! 🕯️');
+            });
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js', { scope:'./' }).catch(error => console.warn('Service Worker:', error));
+                }, { once:true });
+            }
+
+            if (shouldShowInstallPrompt(false)) {
+                setTimeout(() => showMobileInstallPrompt(false), 2600);
+            }
+        }
+
+
         // --- TEMA CLARO / OSCURO ---
         const MARGIE_THEME_KEY = 'margie_theme';
 
@@ -3844,6 +4128,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             syncThemeControls();
             setupGoogleAccounts();
+            setupMargiePWA();
             // Iniciar extracción de datos
             setupCustomDeliveryDate();
             setupCustomCandlePreview();
