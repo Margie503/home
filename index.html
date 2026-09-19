@@ -1205,6 +1205,142 @@
             button.bg-brand-gold::after, a.bg-brand-gold::after { display:none; }
         }
 
+
+        /* =====================================================
+           PARCHE MÓVIL ESTABLE — mantiene el diseño premium
+           Evita parpadeos, contenido oculto y repintados pesados
+           ===================================================== */
+        @keyframes margieMobileViewEnterStable {
+            from { opacity:.001; transform:translateY(5px); }
+            to { opacity:1; transform:none; }
+        }
+        @keyframes margieMobileHeroEnterStable {
+            from { opacity:.01; transform:translateY(10px); }
+            to { opacity:1; transform:none; }
+        }
+
+        @media (max-width:767px) {
+            /* Nada importante queda oculto esperando IntersectionObserver */
+            .margie-reveal,
+            .margie-reveal-scale,
+            .margie-reveal.is-visible,
+            .margie-reveal-scale.is-visible {
+                opacity:1 !important;
+                transform:none !important;
+                filter:none !important;
+                animation:none !important;
+            }
+
+            /* Una sola transición ligera al cambiar de pantalla */
+            .view-section.active {
+                opacity:1 !important;
+                animation:margieMobileViewEnterStable .24s ease-out both !important;
+            }
+            .view-section.active.animate-fade-in {
+                opacity:1 !important;
+            }
+
+            /* Evita la doble animación de tarjetas que causaba flashes */
+            .product-card.margie-card-enter,
+            .margie-premium-pop {
+                opacity:1 !important;
+                transform:none !important;
+                filter:none !important;
+                animation:none !important;
+                animation-delay:0s !important;
+            }
+            .product-card {
+                transition:transform .18s ease, box-shadow .22s ease, border-color .22s ease !important;
+                backface-visibility:hidden;
+                -webkit-backface-visibility:hidden;
+                transform:translateZ(0);
+            }
+            .product-card:active { transform:scale(.988) translateZ(0) !important; }
+
+            /* Hero bonito, pero sin zoom infinito ni filtros pesados */
+            .margie-hero .hero-bg {
+                animation:none !important;
+                transform:scale(1.015) !important;
+                will-change:auto !important;
+            }
+            .hero-kicker { animation:none !important; }
+            .margie-hero .relative.z-10 {
+                animation:margieMobileHeroEnterStable .42s ease-out both !important;
+            }
+            #margie-fireflies,
+            .hero-sparkles { display:none !important; }
+
+            /* Fixed + blur suele producir flicker en iOS/Safari */
+            #navbar,
+            .mobile-install-card,
+            .margie-mobile-nav,
+            .admin-order-tabs {
+                backdrop-filter:none !important;
+                -webkit-backdrop-filter:none !important;
+            }
+            #navbar { background:rgba(253,251,247,.985) !important; }
+            html.dark-mode #navbar { background:rgba(25,20,17,.985) !important; }
+            .mobile-install-card { background:#FDFBF7 !important; }
+            html.dark-mode .mobile-install-card { background:#1f1814 !important; }
+            .margie-mobile-nav { background:rgba(253,251,247,.985) !important; }
+            html.dark-mode .margie-mobile-nav { background:rgba(28,22,18,.985) !important; }
+            .admin-order-tabs { background:#FDFBF7 !important; }
+            html.dark-mode .admin-order-tabs { background:#211a16 !important; }
+
+            /* Menos repintados continuos en elementos fijos */
+            #margie-scroll-progress { display:none !important; }
+            #whatsapp-btn {
+                animation:none !important;
+                transition:transform .18s ease, box-shadow .22s ease !important;
+                will-change:auto !important;
+            }
+            #whatsapp-btn:active { transform:scale(.92) !important; }
+
+            /* Loader estable: conserva la llama, elimina lo más pesado */
+            #loader {
+                backface-visibility:hidden;
+                -webkit-backface-visibility:hidden;
+                transform:translateZ(0);
+            }
+            .fire-loader { animation:none !important; }
+            .fire-halo { filter:none !important; animation:none !important; opacity:.65; }
+            .ember { display:none !important; }
+            .loader-status { animation:none !important; }
+
+            /* Imágenes: evita saltos y flashes durante carga */
+            img {
+                -webkit-transform:translateZ(0);
+                backface-visibility:hidden;
+            }
+            .product-img-wrapper img,
+            .margie-hero img {
+                will-change:auto !important;
+            }
+
+            /* En móvil solo animamos interacción, no visibilidad */
+            button:active,
+            a.bg-brand-gold:active,
+            .mobile-install-primary:active {
+                transform:scale(.985);
+            }
+
+            /* Reduce sombras muy costosas sin cambiar el look */
+            .product-card,
+            #account-login-panel,
+            #account-orders-list > article,
+            #cart-items-container > div,
+            #view-checkout > div.bg-white {
+                box-shadow:0 9px 24px rgba(74,59,50,.075) !important;
+            }
+            html.dark-mode .product-card,
+            html.dark-mode #account-login-panel,
+            html.dark-mode #account-orders-list > article,
+            html.dark-mode #cart-items-container > div,
+            html.dark-mode #view-checkout > div.bg-white {
+                box-shadow:0 9px 24px rgba(0,0,0,.22) !important;
+            }
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
@@ -2287,7 +2423,7 @@
             document.querySelectorAll('.view-section').forEach(el => {
                 el.classList.remove('active', 'flex-active', 'animate-fade-in');
             });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: window.matchMedia('(max-width: 767px)').matches ? 'auto' : 'smooth' });
 
             const targetView = document.getElementById(`view-${viewId}`);
             if(targetView) {
@@ -4141,6 +4277,14 @@
         }, { passive: true });
 
         function setupMargieAnimations() {
+            const mobileStable = window.matchMedia('(max-width: 767px)').matches;
+            if (mobileStable) {
+                document.querySelectorAll('.margie-reveal,.margie-reveal-scale').forEach(el => {
+                    el.classList.add('is-visible');
+                });
+                return;
+            }
+
             const targets = document.querySelectorAll(
                 '#view-home section, #view-home > div:not(.margie-hero), .view-section > h1, .view-section > div, #footer > div'
             );
@@ -4222,7 +4366,7 @@
             }
 
             // Luciérnagas decorativas en el hero
-            if (hero && !document.getElementById('margie-fireflies') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            if (hero && window.matchMedia('(min-width: 768px)').matches && !document.getElementById('margie-fireflies') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 const flies = document.createElement('div');
                 flies.id = 'margie-fireflies';
                 const positions = [8,17,28,41,54,66,77,88,95];
@@ -4275,6 +4419,7 @@
         }
 
         function animateCurrentProductCards() {
+            if (window.matchMedia('(max-width: 767px)').matches) return;
             document.querySelectorAll('.product-card').forEach(card => {
                 card.classList.remove('margie-card-enter');
                 void card.offsetWidth;
@@ -4305,14 +4450,17 @@
             updateMargieMobileNav(state?.currentView || 'home');
             syncMargieMobileCartBadge();
 
+            const mobileStable = window.matchMedia('(max-width: 767px)').matches;
+
             const cartBadge = document.getElementById('cart-count');
             if (cartBadge && !cartBadge.dataset.mobileSyncReady) {
                 cartBadge.dataset.mobileSyncReady = '1';
                 new MutationObserver(syncMargieMobileCartBadge).observe(cartBadge, { childList:true, characterData:true, subtree:true });
             }
 
-            // Stagger elegante para tarjetas dinámicas.
+            // Stagger elegante en escritorio. En móvil evitamos forzar reflow/opacity.
             const stagger = () => {
+                if (mobileStable) return;
                 document.querySelectorAll('.product-card, #account-orders-list > article, #cart-items-container > div').forEach((el, i) => {
                     el.style.animationDelay = `${Math.min(i,8) * 55}ms`;
                     el.classList.remove('margie-premium-pop');
@@ -4321,7 +4469,7 @@
                 });
             };
 
-            if (!document.getElementById('margie-premium-motion-style')) {
+            if (!mobileStable && !document.getElementById('margie-premium-motion-style')) {
                 const style = document.createElement('style');
                 style.id = 'margie-premium-motion-style';
                 style.textContent = `.margie-premium-pop{animation:margieSoftPop .52s var(--margie-ease) both}`;
@@ -4340,17 +4488,19 @@
                 }, { passive:true });
             }
 
-            // Reanima contenido que aparece dinámicamente sin tocar su lógica.
-            ['shop-products-container','featured-products-container','fav-products-container','account-orders-list','cart-items-container'].forEach(id => {
-                const root = document.getElementById(id);
-                if (!root || root.dataset.premiumObserved) return;
-                root.dataset.premiumObserved = '1';
-                let timer;
-                new MutationObserver(() => {
-                    clearTimeout(timer);
-                    timer = setTimeout(stagger, 40);
-                }).observe(root, { childList:true, subtree:false });
-            });
+            // Reanima contenido dinámico solo en escritorio; en móvil priorizamos estabilidad.
+            if (!mobileStable) {
+                ['shop-products-container','featured-products-container','fav-products-container','account-orders-list','cart-items-container'].forEach(id => {
+                    const root = document.getElementById(id);
+                    if (!root || root.dataset.premiumObserved) return;
+                    root.dataset.premiumObserved = '1';
+                    let timer;
+                    new MutationObserver(() => {
+                        clearTimeout(timer);
+                        timer = setTimeout(stagger, 40);
+                    }).observe(root, { childList:true, subtree:false });
+                });
+            }
         }
 
         function setupFireCursor() {
@@ -4596,11 +4746,12 @@
                 updateUI();
                 
                 // Retirar pantalla de carga suavemente
+                const mobileStable = window.matchMedia('(max-width: 767px)').matches;
                 setTimeout(() => {
                     const loader = document.getElementById('loader');
                     loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 780);
-                }, 1050); 
+                    setTimeout(() => loader.style.display = 'none', mobileStable ? 280 : 780);
+                }, mobileStable ? 260 : 1050); 
 
             }).catch((error) => {
                 console.error("Falla crítica en carga de catálogo:", error);
