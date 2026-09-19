@@ -1,4 +1,4 @@
-const CACHE_NAME = 'margie-app-v1';
+const CACHE_NAME = 'margie-app-v2-mobile-premium';
 const APP_SHELL = [
   './',
   './index.html',
