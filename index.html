@@ -1291,14 +1291,19 @@
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <i class="fas fa-check text-4xl text-green-500"></i>
                 </div>
-                <h1 class="font-serif text-3xl text-brand-brown mb-2">¡Pedido procesado!</h1>
-                <p class="text-gray-600 mb-6">Serás redirigido a WhatsApp para finalizar la comunicación con nosotros.</p>
-                <div class="bg-brand-light p-4 rounded mb-8 inline-block">
-                    <span class="text-sm text-gray-500 block mb-1">Número de pedido:</span>
+                <h1 class="font-serif text-3xl text-brand-brown mb-2">¡Pedido registrado!</h1>
+                <p class="text-gray-600 mb-5">Abrimos WhatsApp con el resumen de tu compra para que puedas finalizar la comunicación con MARGIE CANDLES.</p>
+                <div class="bg-brand-light p-4 rounded-xl mb-5 inline-block border border-brand-beige">
+                    <span class="text-sm text-gray-500 block mb-1">Número de pedido</span>
                     <strong class="text-xl text-brand-brown tracking-widest" id="order-number"></strong>
                 </div>
-                <div>
-                    <button onclick="navigate('home')" class="bg-brand-gold hover:bg-brand-goldhover text-white px-8 py-3 rounded-sm uppercase tracking-wider text-sm font-bold">Volver al inicio</button>
+                <div id="success-tracking-note" class="max-w-lg mx-auto mb-7 rounded-xl border border-brand-gold/30 bg-brand-gold/5 p-4 text-sm text-gray-600">
+                    <i class="fas fa-route text-brand-gold mr-2"></i>
+                    Si realizaste la compra con tu cuenta de Google, puedes revisar el estado del pedido en <strong>Mi cuenta → Mis pedidos</strong> desde esta misma página.
+                </div>
+                <div class="flex flex-col sm:flex-row justify-center gap-3">
+                    <button onclick="navigate('account')" class="bg-brand-gold hover:bg-brand-goldhover text-white px-8 py-3 rounded-sm uppercase tracking-wider text-sm font-bold"><i class="fas fa-box-open mr-2"></i>Ver mis pedidos</button>
+                    <button onclick="navigate('home')" class="bg-white border border-brand-beige hover:border-brand-gold text-brand-brown px-8 py-3 rounded-sm uppercase tracking-wider text-sm font-bold">Volver al inicio</button>
                 </div>
             </div>
         </section>
@@ -1673,6 +1678,7 @@
         // El Client ID NO es una contraseña y puede estar en el HTML.
         // Reemplázalo por el OAuth 2.0 Client ID tipo "Aplicación web" de tu proyecto de Google Cloud.
         const GOOGLE_CLIENT_ID = '485047962004-9hhad470v7vk2sibcn6qa8o3trhtfdh5.apps.googleusercontent.com';
+        const MARGIE_STORE_URL = 'https://margie503.github.io/home/';
         const GOOGLE_TOKEN_STORAGE_KEY = 'margie_google_id_token';
         const ORDER_STATUSES = ['Recibido', 'Confirmado', 'En preparación', 'Listo para entrega', 'En camino', 'Entregado'];
         const ADMIN_ORDER_STATUSES = [...ORDER_STATUSES, 'Cancelado'];
@@ -2629,23 +2635,25 @@
 
             let subtotal = 0;
             const orderItems = [];
-            let orderSummary = `Número de pedido: ${orderNumber}
-
-*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*
+            let orderSummary = `🕯️ *MARGIE CANDLES — NUEVO PEDIDO*
+`;
+            orderSummary += `━━━━━━━━━━━━━━━━━━
+`;
+            orderSummary += `🧾 *Pedido:* ${orderNumber}
 
 `;
             orderSummary += `👤 *Cliente:* ${name}
 `;
             orderSummary += `📞 *Teléfono:* ${phone}
 `;
-            orderSummary += `✉️ *Email:* ${email}
+            orderSummary += `✉️ *Correo:* ${email}
 `;
-            orderSummary += `📍 *Punto de Entrega:* ${address}
+            orderSummary += `📍 *Entrega:* ${address}
 `;
-            orderSummary += `💳 *Método de Pago:* ${paymentMethod}
+            orderSummary += `💳 *Pago:* ${paymentMethod}
 
 `;
-            orderSummary += `🛒 *Detalle del Pedido:*
+            orderSummary += `🛍️ *DETALLE DEL PEDIDO*
 `;
 
             state.cart.forEach(item => {
@@ -2674,7 +2682,7 @@
             }
             orderSummary += `🚚 *Envío:* $${shippingCost.toFixed(2)}
 `;
-            orderSummary += `💰 *Total a pagar:* $${total.toFixed(2)}`;
+            orderSummary += `💰 *TOTAL:* *$${total.toFixed(2)}*`;
 
             const btn = form.querySelector('button[type="submit"]');
             const originalHtml = btn.innerHTML;
@@ -2701,11 +2709,44 @@
                         items:JSON.stringify(orderItems)
                     });
                     cloudSaved = true;
+                    orderSummary += `
+
+━━━━━━━━━━━━━━━━━━
+`;
+                    orderSummary += `📲 *SEGUIMIENTO DEL PEDIDO*
+`;
+                    orderSummary += `Tu pedido quedó guardado en tu cuenta de MARGIE CANDLES.
+`;
+                    orderSummary += `Puedes revisar su estado cuando quieras desde:
+`;
+                    orderSummary += `🌐 ${MARGIE_STORE_URL}
+`;
+                    orderSummary += `👤 Entra a *Mi cuenta → Mis pedidos* con la misma cuenta de Google.
+`;
+                    orderSummary += `🔎 Guarda tu número de pedido: *${orderNumber}*
+
+`;
+                    orderSummary += `✨ Gracias por elegir *MARGIE CANDLES*.`;
                     btn.innerHTML = '<i class="fab fa-whatsapp text-lg mr-2"></i> Abriendo WhatsApp...';
                 } catch (error) {
                     console.error('No se pudo guardar el pedido en la cuenta:', error);
                     showToast('El pedido seguirá por WhatsApp, pero no se pudo guardar en Mi cuenta.');
                 }
+            }
+
+            if (!customerAccount.signedIn) {
+                orderSummary += `
+
+━━━━━━━━━━━━━━━━━━
+`;
+                orderSummary += `🌐 *MARGIE CANDLES EN LÍNEA*
+`;
+                orderSummary += `Visita ${MARGIE_STORE_URL}
+`;
+                orderSummary += `Para guardar y consultar pedidos desde la web, inicia sesión con Google antes de comprar.
+
+`;
+                orderSummary += `✨ Gracias por elegir *MARGIE CANDLES*.`;
             }
 
             document.getElementById('order-number').innerText = orderNumber;
