@@ -25,6 +25,8 @@
 
     <!-- PapaParse para lectura de CSV de Google Sheets -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Google Identity Services para cuentas de clientes -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- Configuración Tailwind -->
     <script>
@@ -715,6 +717,33 @@
         }
         html.dark-mode #admin-coupons-table-card { background:#211a16 !important; }
 
+
+        /* ===== CUENTAS GOOGLE + SEGUIMIENTO DE PEDIDOS ===== */
+        .account-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
+        @media (hover:hover) and (pointer:fine) {
+            .account-card:hover { transform: translateY(-3px); box-shadow: 0 16px 35px rgba(74,59,50,.10); border-color: rgba(200,169,126,.65); }
+        }
+        .order-status-track { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:0; position:relative; margin-top:18px; }
+        .order-status-track::before { content:''; position:absolute; left:7%; right:7%; top:13px; height:2px; background:#eadfd4; z-index:0; }
+        .order-status-step { position:relative; z-index:1; text-align:center; min-width:0; }
+        .order-status-dot { width:27px; height:27px; margin:0 auto 7px; border-radius:999px; background:#f4ebe1; border:2px solid #dfcdb9; display:flex; align-items:center; justify-content:center; font-size:10px; color:#9d8875; transition:.3s ease; }
+        .order-status-step.done .order-status-dot { background:#C8A97E; border-color:#C8A97E; color:#fff; box-shadow:0 0 0 4px rgba(200,169,126,.13); }
+        .order-status-step.current .order-status-dot { transform:scale(1.12); box-shadow:0 0 0 5px rgba(200,169,126,.18),0 0 18px rgba(200,169,126,.25); }
+        .order-status-label { font-size:9px; color:#968779; line-height:1.2; white-space:normal; }
+        .order-status-step.done .order-status-label { color:#4A3B32; font-weight:700; }
+        .account-avatar { width:72px; height:72px; border-radius:999px; object-fit:cover; border:3px solid #fff; box-shadow:0 0 0 2px #C8A97E, 0 8px 24px rgba(74,59,50,.12); }
+        .google-login-shell { min-height:44px; display:flex; justify-content:center; align-items:center; }
+        .account-sync-dot { width:8px; height:8px; border-radius:50%; background:#65a36f; box-shadow:0 0 0 4px rgba(101,163,111,.12); display:inline-block; }
+        html.dark-mode .order-status-track::before { background:#473930; }
+        html.dark-mode .order-status-dot { background:#2a211c; border-color:#554236; color:#a99789; }
+        html.dark-mode .order-status-step.done .order-status-dot { background:#C8A97E; border-color:#C8A97E; color:#211a16; }
+        html.dark-mode .order-status-step.done .order-status-label { color:#eadfd5; }
+        html.dark-mode .account-avatar { border-color:#211a16; }
+        @media (max-width:640px) {
+            .order-status-track { grid-template-columns:repeat(3,minmax(0,1fr)); row-gap:14px; }
+            .order-status-track::before { display:none; }
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased flex flex-col min-h-screen">
@@ -782,6 +811,10 @@
                     <button onclick="navigate('admin')" class="text-brand-brown hover:text-brand-gold transition-colors" title="Administrador" aria-label="Abrir administrador">
                         <i class="fas fa-lock text-lg"></i>
                     </button>
+                    <button id="account-nav-btn" onclick="navigate('account')" class="text-brand-brown hover:text-brand-gold transition-colors relative" title="Mi cuenta" aria-label="Abrir mi cuenta">
+                        <i id="account-nav-icon" class="fas fa-user-circle text-lg"></i>
+                        <span id="account-sync-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 border-2 border-brand-light rounded-full"></span>
+                    </button>
                     <button onclick="navigate('shop')" class="text-brand-brown hover:text-brand-gold transition-colors" title="Buscar">
                         <i class="fas fa-search text-lg"></i>
                     </button>
@@ -804,6 +837,7 @@
                 <a href="#" onclick="navigate('shop'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm">Tienda</a>
                 <a href="#" onclick="navigate('shop', { filter: 'ofertas' }); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm text-brand-gold">Ofertas</a>
                 <a href="#" onclick="navigate('favorites'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm">Favoritos</a>
+                <a href="#" onclick="navigate('account'); toggleMobileMenu()" class="block px-3 py-2 text-brand-brown uppercase tracking-widest text-sm"><i class="fas fa-user-circle mr-2 text-brand-gold"></i>Mi cuenta</a>
                 <button type="button" data-theme-toggle onclick="toggleDarkMode()" class="theme-toggle-btn w-full px-3 py-2 text-brand-brown uppercase tracking-widest text-sm flex items-center justify-center gap-2">
                     <i class="fas fa-moon"></i><span class="mobile-theme-label">Modo oscuro</span>
                 </button>
@@ -1284,6 +1318,61 @@
             </div>
         </section>
 
+
+        <!-- ================= VISTA: MI CUENTA ================= -->
+        <section id="view-account" class="view-section py-10 max-w-6xl mx-auto px-4 min-h-[70vh]">
+            <div class="text-center mb-10">
+                <span class="text-brand-gold uppercase tracking-[0.25em] text-xs font-bold">MARGIE CANDLES</span>
+                <h1 class="font-serif text-4xl text-brand-brown mt-2">Mi cuenta</h1>
+                <p class="text-gray-500 mt-2">Guarda tu carrito, consulta tus pedidos y sigue su estado.</p>
+            </div>
+
+            <div id="account-login-panel" class="max-w-xl mx-auto bg-white rounded-2xl border border-brand-beige shadow-sm p-7 md:p-9 text-center">
+                <div class="w-16 h-16 rounded-full bg-brand-dark text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
+                    <i class="fab fa-google text-2xl"></i>
+                </div>
+                <h2 class="font-serif text-2xl text-brand-brown">Entrar con Google</h2>
+                <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto">Al iniciar sesión, tu carrito se sincroniza con tu cuenta y podrás ver el historial y seguimiento de tus pedidos desde cualquier dispositivo.</p>
+                <div id="google-signin-button" class="google-login-shell mt-6"></div>
+                <p id="google-account-config-message" class="hidden mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
+                <p class="text-[11px] text-gray-400 mt-5">Google solo se usa para identificar tu cuenta. Tu contraseña de Google nunca se comparte con MARGIE CANDLES.</p>
+            </div>
+
+            <div id="account-dashboard" class="hidden">
+                <div class="bg-white rounded-2xl border border-brand-beige shadow-sm p-6 md:p-8 mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                    <img id="account-avatar" src="logo.png" alt="Foto de perfil" class="account-avatar">
+                    <div class="text-center sm:text-left flex-1 min-w-0">
+                        <div class="flex flex-wrap justify-center sm:justify-start items-center gap-2">
+                            <h2 id="account-name" class="font-serif text-2xl md:text-3xl text-brand-brown">Cliente</h2>
+                            <span class="inline-flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full"><span class="account-sync-dot"></span>Sincronizado</span>
+                        </div>
+                        <p id="account-email" class="text-sm text-gray-500 mt-1 break-all"></p>
+                        <p class="text-xs text-gray-400 mt-3"><i class="fas fa-shopping-cart text-brand-gold mr-1"></i> Tu carrito se guarda automáticamente mientras tengas la sesión iniciada.</p>
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button type="button" onclick="refreshCustomerAccount()" class="px-4 py-2.5 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown text-sm font-bold transition-colors"><i class="fas fa-sync-alt mr-2"></i>Actualizar</button>
+                        <button type="button" onclick="signOutGoogleAccount()" class="px-4 py-2.5 rounded-lg bg-brand-dark hover:bg-brand-brown text-white text-sm font-bold transition-colors"><i class="fas fa-sign-out-alt mr-2"></i>Salir</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+                    <div>
+                        <span class="text-brand-gold uppercase tracking-[0.2em] text-[10px] font-bold">Historial</span>
+                        <h2 class="font-serif text-3xl text-brand-brown mt-1">Mis pedidos</h2>
+                    </div>
+                    <span id="account-orders-count" class="text-sm text-gray-500"></span>
+                </div>
+                <div id="account-orders-loading" class="hidden bg-white rounded-xl border border-brand-beige p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-brand-gold mr-2"></i>Cargando pedidos...</div>
+                <div id="account-orders-list" class="space-y-5"></div>
+                <div id="account-orders-empty" class="hidden bg-white rounded-2xl border border-brand-beige p-10 text-center">
+                    <i class="fas fa-box-open text-4xl text-brand-gold/60 mb-4"></i>
+                    <h3 class="font-serif text-xl text-brand-brown">Todavía no tienes pedidos guardados</h3>
+                    <p class="text-sm text-gray-500 mt-2">Cuando confirmes una compra con tu cuenta iniciada, aparecerá aquí automáticamente.</p>
+                    <button onclick="navigate('shop')" class="mt-5 bg-brand-gold hover:bg-brand-goldhover text-white px-6 py-3 rounded-lg text-sm font-bold">Explorar tienda</button>
+                </div>
+            </div>
+        </section>
+
         <!-- ================= VISTA: ADMINISTRADOR ================= -->
         <section id="view-admin" class="view-section py-10 max-w-7xl mx-auto px-4 min-h-[70vh]">
             <div id="admin-login-panel" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border border-brand-beige">
@@ -1374,6 +1463,32 @@
                         </table>
                     </div>
                     <div id="admin-empty-coupons" class="hidden p-10 text-center text-gray-500">Todavía no tienes cupones.</div>
+                </div>
+
+                <div id="admin-orders-table-card" class="bg-white rounded-xl border border-brand-beige shadow-sm overflow-hidden mt-8">
+                    <div class="p-5 border-b border-brand-beige flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-brand-gold uppercase tracking-[0.2em] text-[10px] font-bold">Seguimiento</span>
+                            <h2 class="font-serif text-2xl text-brand-brown mt-1">Pedidos de clientes</h2>
+                            <p class="text-xs text-gray-500 mt-1">Actualiza el estado y el cliente lo verá en su cuenta.</p>
+                        </div>
+                        <button type="button" onclick="loadAdminOrders()" class="px-4 py-2.5 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown text-sm font-bold"><i class="fas fa-sync-alt mr-2"></i>Actualizar</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-brand-light text-brand-brown">
+                                <tr>
+                                    <th class="text-left p-4 font-semibold">Pedido</th>
+                                    <th class="text-left p-4 font-semibold">Cliente</th>
+                                    <th class="text-left p-4 font-semibold">Total</th>
+                                    <th class="text-left p-4 font-semibold">Estado</th>
+                                    <th class="text-left p-4 font-semibold">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-body" class="divide-y divide-brand-beige"></tbody>
+                        </table>
+                    </div>
+                    <div id="admin-empty-orders" class="hidden p-10 text-center text-gray-500">Todavía no hay pedidos registrados con cuentas Google.</div>
                 </div>
             </div>
         </section>
@@ -1554,6 +1669,18 @@
         let adminCoupons = [];
         let appliedCoupon = null;
 
+        // --- CUENTAS DE CLIENTES CON GOOGLE ---
+        // El Client ID NO es una contraseña y puede estar en el HTML.
+        // Reemplázalo por el OAuth 2.0 Client ID tipo "Aplicación web" de tu proyecto de Google Cloud.
+        const GOOGLE_CLIENT_ID = 'PEGA_AQUI_TU_CLIENT_ID.apps.googleusercontent.com';
+        const GOOGLE_TOKEN_STORAGE_KEY = 'margie_google_id_token';
+        const ORDER_STATUSES = ['Recibido', 'Confirmado', 'En preparación', 'Listo para entrega', 'En camino', 'Entregado'];
+        const ADMIN_ORDER_STATUSES = [...ORDER_STATUSES, 'Cancelado'];
+        let customerAccount = { signedIn:false, idToken:'', profile:null, orders:[] };
+        let cloudCartSaveTimer = null;
+        let adminOrders = [];
+
+
         // Función: Extraer datos de Google Sheets
         function cargarProductosDesdeGoogle() {
             // URL configurada automáticamente para salida CSV
@@ -1622,10 +1749,11 @@
             shopFilters: { query: '', category: 'all', sort: 'default', offersOnly: false }
         };
 
-        function saveState() {
+        function saveState(options = {}) {
             localStorage.setItem('margie_cart', JSON.stringify(state.cart));
             localStorage.setItem('margie_favorites', JSON.stringify(state.favorites));
             updateUI();
+            if (!options.skipCloud) scheduleCloudCartSave();
         }
 
         // --- 3. ENRUTADOR SPA (Single Page Application Routing) ---
@@ -1659,6 +1787,7 @@
                 renderCheckoutView();
             }
             if (viewId === 'favorites') { renderFavoritesView(); }
+            if (viewId === 'account') { renderAccountView(); }
             if (viewId === 'admin') { renderAdminView(); }
         }
 
@@ -2200,6 +2329,18 @@
                 select.addEventListener('change', updateCheckoutTotal);
                 select.dataset.shippingListenerAttached = 'true';
             }
+
+            // Completa nombre y correo con la cuenta Google sin sobrescribir lo que el cliente ya escribió.
+            if (customerAccount.signedIn && customerAccount.profile) {
+                const form = document.getElementById('checkout-form');
+                const textInputs = form?.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]');
+                if (textInputs?.length >= 4) {
+                    const parts = String(customerAccount.profile.name || '').trim().split(/\s+/).filter(Boolean);
+                    if (!textInputs[0].value && parts.length) textInputs[0].value = parts[0];
+                    if (!textInputs[1].value && parts.length > 1) textInputs[1].value = parts.slice(1).join(' ');
+                    if (!textInputs[2].value) textInputs[2].value = customerAccount.profile.email || '';
+                }
+            }
         }
 
         function renderFavoritesView() {
@@ -2219,10 +2360,11 @@
         // --- 5. LOGICA DE ACCIONES ---
         
         function generateOrderNumber() {
-            const key = 'margie_last_order_number';
-            let number = parseInt(localStorage.getItem(key) || '0', 10) + 1;
-            localStorage.setItem(key, String(number));
-            return `MC-${String(number).padStart(4, '0')}`;
+            const now = new Date();
+            const date = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            const stamp = String(now.getTime()).slice(-6);
+            const random = Math.floor(Math.random() * 90 + 10);
+            return `MC-${date}-${stamp}${random}`;
         }
 
         function addToCart(productId, qty = 1, aroma = '', size = '') {
@@ -2472,12 +2614,11 @@
             window.location.href = whatsappUrl;
         }
 
-        function handleCheckout(e) {
+        async function handleCheckout(e) {
             e.preventDefault();
-            
-            
+
             const orderNumber = generateOrderNumber();
-const form = e.target;
+            const form = e.target;
             const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]');
             const name = textInputs[0].value + ' ' + textInputs[1].value;
             const email = textInputs[2].value;
@@ -2487,13 +2628,25 @@ const form = e.target;
             const paymentMethod = form.querySelector('input[name="payment"]:checked')?.parentElement?.innerText?.trim() || 'No especificado';
 
             let subtotal = 0;
-            let orderSummary = `Número de pedido: ${orderNumber}\n\n*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*\n\n`;
-            orderSummary += `👤 *Cliente:* ${name}\n`;
-            orderSummary += `📞 *Teléfono:* ${phone}\n`;
-            orderSummary += `✉️ *Email:* ${email}\n`;
-            orderSummary += `📍 *Punto de Entrega:* ${address}\n`;
-            orderSummary += `💳 *Método de Pago:* ${paymentMethod}\n\n`;
-            orderSummary += `🛒 *Detalle del Pedido:*\n`;
+            const orderItems = [];
+            let orderSummary = `Número de pedido: ${orderNumber}
+
+*¡Hola MARGIE CANDLES! Quiero realizar un pedido:*
+
+`;
+            orderSummary += `👤 *Cliente:* ${name}
+`;
+            orderSummary += `📞 *Teléfono:* ${phone}
+`;
+            orderSummary += `✉️ *Email:* ${email}
+`;
+            orderSummary += `📍 *Punto de Entrega:* ${address}
+`;
+            orderSummary += `💳 *Método de Pago:* ${paymentMethod}
+
+`;
+            orderSummary += `🛒 *Detalle del Pedido:*
+`;
 
             state.cart.forEach(item => {
                 const p = productos.find(prod => prod.id === item.productId);
@@ -2501,7 +2654,9 @@ const form = e.target;
                     const unitPrice = getProductPriceForSize(p, item.size);
                     const itemTotal = unitPrice * item.quantity;
                     subtotal += itemTotal;
-                    orderSummary += `• ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} — $${unitPrice.toFixed(2)} c/u ($${itemTotal.toFixed(2)})\n`;
+                    orderItems.push({ productId:p.id, name:p.name, quantity:item.quantity, size:item.size || '', aroma:item.aroma || '', unitPrice, total:itemTotal });
+                    orderSummary += `• ${item.quantity}x ${p.name}${item.size ? ` — Tamaño: ${item.size}` : ''}${item.aroma ? ` — Aroma: ${item.aroma}` : ''} — $${unitPrice.toFixed(2)} c/u ($${itemTotal.toFixed(2)})
+`;
                 }
             });
 
@@ -2522,24 +2677,52 @@ const form = e.target;
             orderSummary += `💰 *Total a pagar:* $${total.toFixed(2)}`;
 
             const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerHTML = '<i class="fab fa-whatsapp text-lg mr-2"></i> Redirigiendo a WhatsApp...';
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = customerAccount.signedIn
+                ? '<i class="fas fa-cloud-upload-alt mr-2"></i> Guardando pedido...'
+                : '<i class="fab fa-whatsapp text-lg mr-2"></i> Redirigiendo a WhatsApp...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                document.getElementById('order-number').innerText = orderNumber;
-                
-                const whatsappUrl = `https://wa.me/50374750007?text=${encodeURIComponent(orderSummary)}`;
-                window.open(whatsappUrl, '_blank');
+            let cloudSaved = false;
+            if (customerAccount.signedIn) {
+                try {
+                    await saveOrderToCustomerAccount({
+                        orderNumber,
+                        customer:name,
+                        email,
+                        phone,
+                        delivery:address,
+                        payment:paymentMethod,
+                        subtotal:subtotal.toFixed(2),
+                        discount:couponDiscount.toFixed(2),
+                        shipping:shippingCost.toFixed(2),
+                        total:total.toFixed(2),
+                        coupon:appliedCoupon?.code || '',
+                        items:JSON.stringify(orderItems)
+                    });
+                    cloudSaved = true;
+                    btn.innerHTML = '<i class="fab fa-whatsapp text-lg mr-2"></i> Abriendo WhatsApp...';
+                } catch (error) {
+                    console.error('No se pudo guardar el pedido en la cuenta:', error);
+                    showToast('El pedido seguirá por WhatsApp, pero no se pudo guardar en Mi cuenta.');
+                }
+            }
 
-                state.cart = [];
-                appliedCoupon = null;
-                saveState();
-                
-                navigate('success');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 800);
+            document.getElementById('order-number').innerText = orderNumber;
+            const whatsappUrl = `https://wa.me/50374750007?text=${encodeURIComponent(orderSummary)}`;
+            window.open(whatsappUrl, '_blank');
+
+            // Solo vaciamos el carrito en la nube si el pedido quedó guardado o si el cliente compra como invitado.
+            state.cart = [];
+            appliedCoupon = null;
+            saveState({ skipCloud:true });
+            if (customerAccount.signedIn && cloudSaved) {
+                customerRequest('saveCart', { cart:'[]' }).catch(() => {});
+            }
+
+            navigate('success');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
         }
 
         // --- 6. UTILIDADES ---
@@ -2577,7 +2760,291 @@ const form = e.target;
             btn.href = `https://wa.me/${baseNumber}?text=${encodeURIComponent(text)}`;
         }
 
-        // --- 7. PANEL DE ADMINISTRADOR ---
+
+        // --- 7. CUENTAS GOOGLE, CARRITO EN LA NUBE Y PEDIDOS ---
+        function googleAccountsConfigured() {
+            return /^\d+-.+\.apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) && !GOOGLE_CLIENT_ID.includes('PEGA_AQUI');
+        }
+
+        function decodeGoogleJwt(token) {
+            try {
+                const payload = token.split('.')[1];
+                const json = decodeURIComponent(atob(payload.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                return JSON.parse(json);
+            } catch (e) { return null; }
+        }
+
+        function customerRequest(action, payload = {}) {
+            if (!adminApiConfigured()) return Promise.reject(new Error('La cuenta todavía no está conectada al servidor.'));
+            if (!customerAccount.idToken) return Promise.reject(new Error('Inicia sesión con Google.'));
+            const body = new URLSearchParams();
+            body.set('action', action);
+            body.set('idToken', customerAccount.idToken);
+            Object.entries(payload).forEach(([key, value]) => body.set(key, value ?? ''));
+            return fetch(ADMIN_API_URL, { method:'POST', body }).then(async response => {
+                if (!response.ok) throw new Error(`Error de conexión (${response.status})`);
+                const data = await response.json();
+                if (!data.ok) {
+                    if (/sesión|token|google/i.test(data.error || '')) clearExpiredGoogleSession();
+                    throw new Error(data.error || 'No se pudo completar la operación.');
+                }
+                return data;
+            });
+        }
+
+        function mergeCarts(localCart, cloudCart) {
+            const map = new Map();
+            [...(cloudCart || []), ...(localCart || [])].forEach(raw => {
+                const item = {
+                    productId: Number(raw.productId),
+                    quantity: Math.max(1, Number(raw.quantity) || 1),
+                    aroma: String(raw.aroma || ''),
+                    size: String(raw.size || '')
+                };
+                if (!Number.isFinite(item.productId)) return;
+                const key = `${item.productId}|${item.size}|${item.aroma}`;
+                if (map.has(key)) map.get(key).quantity += item.quantity;
+                else map.set(key, item);
+            });
+            return Array.from(map.values());
+        }
+
+        function scheduleCloudCartSave() {
+            if (!customerAccount.signedIn || !customerAccount.idToken) return;
+            clearTimeout(cloudCartSaveTimer);
+            cloudCartSaveTimer = setTimeout(() => {
+                customerRequest('saveCart', { cart: JSON.stringify(state.cart) }).catch(error => {
+                    console.warn('No se pudo sincronizar el carrito:', error);
+                });
+            }, 500);
+        }
+
+        async function loadCustomerData({ mergeCart = false } = {}) {
+            if (!customerAccount.signedIn) return;
+            const data = await customerRequest('userData');
+            customerAccount.profile = data.profile || customerAccount.profile;
+            customerAccount.orders = Array.isArray(data.orders) ? data.orders : [];
+            const cloudCart = Array.isArray(data.cart) ? data.cart : [];
+            if (mergeCart) {
+                state.cart = mergeCarts(state.cart, cloudCart);
+                saveState({ skipCloud:true });
+                await customerRequest('saveCart', { cart: JSON.stringify(state.cart) });
+            } else if (cloudCart.length || state.cart.length === 0) {
+                state.cart = cloudCart;
+                saveState({ skipCloud:true });
+            }
+            updateAccountNav();
+            if (state.currentView === 'account') renderAccountView();
+            return data;
+        }
+
+        async function handleGoogleCredentialResponse(response) {
+            if (!response?.credential) return;
+            const claims = decodeGoogleJwt(response.credential);
+            if (!claims) return showToast('No pudimos leer la sesión de Google.');
+            customerAccount = {
+                signedIn:true,
+                idToken:response.credential,
+                profile:{ sub:claims.sub || '', name:claims.name || '', email:claims.email || '', picture:claims.picture || '' },
+                orders:[]
+            };
+            try { localStorage.setItem(GOOGLE_TOKEN_STORAGE_KEY, response.credential); } catch (e) {}
+            updateAccountNav();
+            renderAccountView();
+            try {
+                await loadCustomerData({ mergeCart:true });
+                showToast('Cuenta Google conectada ✨');
+            } catch (error) {
+                showToast(error.message);
+            }
+        }
+
+        function restoreGoogleSession() {
+            let token = '';
+            try { token = localStorage.getItem(GOOGLE_TOKEN_STORAGE_KEY) || ''; } catch (e) {}
+            if (!token) return;
+            const claims = decodeGoogleJwt(token);
+            const nowSeconds = Math.floor(Date.now()/1000);
+            if (!claims || !claims.exp || claims.exp <= nowSeconds + 30 || claims.aud !== GOOGLE_CLIENT_ID) {
+                try { localStorage.removeItem(GOOGLE_TOKEN_STORAGE_KEY); } catch (e) {}
+                return;
+            }
+            customerAccount = {
+                signedIn:true,
+                idToken:token,
+                profile:{ sub:claims.sub || '', name:claims.name || '', email:claims.email || '', picture:claims.picture || '' },
+                orders:[]
+            };
+            updateAccountNav();
+            loadCustomerData({ mergeCart:false }).catch(() => clearExpiredGoogleSession(false));
+        }
+
+        function clearExpiredGoogleSession(showMessage = true) {
+            try { localStorage.removeItem(GOOGLE_TOKEN_STORAGE_KEY); } catch (e) {}
+            customerAccount = { signedIn:false, idToken:'', profile:null, orders:[] };
+            updateAccountNav();
+            if (state.currentView === 'account') renderAccountView();
+            if (showMessage) showToast('Tu sesión de Google venció. Inicia sesión de nuevo.');
+        }
+
+        function signOutGoogleAccount() {
+            try { localStorage.removeItem(GOOGLE_TOKEN_STORAGE_KEY); } catch (e) {}
+            try { window.google?.accounts?.id?.disableAutoSelect(); } catch (e) {}
+            customerAccount = { signedIn:false, idToken:'', profile:null, orders:[] };
+            updateAccountNav();
+            renderAccountView();
+            showToast('Sesión cerrada');
+        }
+
+        function updateAccountNav() {
+            const badge = document.getElementById('account-sync-badge');
+            const icon = document.getElementById('account-nav-icon');
+            badge?.classList.toggle('hidden', !customerAccount.signedIn);
+            if (icon) icon.className = customerAccount.signedIn ? 'fas fa-user-check text-lg text-brand-gold' : 'fas fa-user-circle text-lg';
+        }
+
+        function setupGoogleAccounts() {
+            restoreGoogleSession();
+            if (!googleAccountsConfigured()) {
+                renderAccountView();
+                return;
+            }
+            let attempts = 0;
+            const boot = () => {
+                attempts++;
+                if (window.google?.accounts?.id) {
+                    google.accounts.id.initialize({
+                        client_id: GOOGLE_CLIENT_ID,
+                        callback: handleGoogleCredentialResponse,
+                        auto_select: false,
+                        cancel_on_tap_outside: true
+                    });
+                    renderGoogleSignInButton();
+                    return;
+                }
+                if (attempts < 30) setTimeout(boot, 200);
+            };
+            boot();
+        }
+
+        function renderGoogleSignInButton() {
+            const host = document.getElementById('google-signin-button');
+            if (!host || customerAccount.signedIn || !googleAccountsConfigured() || !window.google?.accounts?.id) return;
+            host.innerHTML = '';
+            google.accounts.id.renderButton(host, {
+                theme: document.documentElement.classList.contains('dark-mode') ? 'filled_black' : 'outline',
+                size:'large',
+                shape:'pill',
+                text:'signin_with',
+                logo_alignment:'left',
+                width:300
+            });
+        }
+
+        function renderAccountView() {
+            const login = document.getElementById('account-login-panel');
+            const dashboard = document.getElementById('account-dashboard');
+            const config = document.getElementById('google-account-config-message');
+            if (!login || !dashboard) return;
+
+            if (!customerAccount.signedIn) {
+                login.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+                if (!googleAccountsConfigured()) {
+                    if (config) {
+                        config.textContent = 'Falta configurar GOOGLE_CLIENT_ID para activar el botón de Google.';
+                        config.classList.remove('hidden');
+                    }
+                    const host = document.getElementById('google-signin-button');
+                    if (host) host.innerHTML = '<span class="text-sm text-gray-400">Cuenta Google pendiente de configuración</span>';
+                } else {
+                    config?.classList.add('hidden');
+                    renderGoogleSignInButton();
+                }
+                return;
+            }
+
+            login.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            const p = customerAccount.profile || {};
+            const avatar = document.getElementById('account-avatar');
+            if (avatar) avatar.src = p.picture || 'logo.png';
+            const name = document.getElementById('account-name');
+            if (name) name.textContent = p.name || 'Cliente';
+            const email = document.getElementById('account-email');
+            if (email) email.textContent = p.email || '';
+            renderCustomerOrders();
+        }
+
+        async function refreshCustomerAccount() {
+            if (!customerAccount.signedIn) return;
+            const loading = document.getElementById('account-orders-loading');
+            loading?.classList.remove('hidden');
+            try {
+                await loadCustomerData({ mergeCart:false });
+                showToast('Cuenta actualizada');
+            } catch (error) {
+                showToast(error.message);
+            } finally {
+                loading?.classList.add('hidden');
+            }
+        }
+
+        function parseOrderItems(value) {
+            if (Array.isArray(value)) return value;
+            try { return JSON.parse(value || '[]'); } catch (e) { return []; }
+        }
+
+        function formatAccountDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return String(value);
+            return date.toLocaleString('es-SV', { dateStyle:'medium', timeStyle:'short' });
+        }
+
+        function renderCustomerOrders() {
+            const list = document.getElementById('account-orders-list');
+            const empty = document.getElementById('account-orders-empty');
+            const count = document.getElementById('account-orders-count');
+            if (!list || !empty) return;
+            const orders = Array.isArray(customerAccount.orders) ? customerAccount.orders : [];
+            if (count) count.textContent = `${orders.length} pedido${orders.length === 1 ? '' : 's'}`;
+            if (!orders.length) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            list.innerHTML = orders.map(order => {
+                const status = String(order.status || 'Recibido');
+                const items = parseOrderItems(order.items);
+                const currentIndex = ORDER_STATUSES.indexOf(status);
+                const canceled = status === 'Cancelado';
+                const statusHtml = canceled
+                    ? '<div class="mt-4 rounded-lg bg-red-50 border border-red-100 text-red-600 px-4 py-3 text-sm font-semibold"><i class="fas fa-ban mr-2"></i>Pedido cancelado</div>'
+                    : `<div class="order-status-track">${ORDER_STATUSES.map((s,i) => `<div class="order-status-step ${i <= currentIndex ? 'done' : ''} ${i === currentIndex ? 'current' : ''}"><div class="order-status-dot">${i < currentIndex ? '<i class="fas fa-check"></i>' : i+1}</div><div class="order-status-label">${escapeHtml(s)}</div></div>`).join('')}</div>`;
+                const itemHtml = items.slice(0,4).map(item => `<div class="flex justify-between gap-3 text-xs text-gray-500"><span class="min-w-0 truncate">${Number(item.quantity)||1}x ${escapeHtml(item.name || 'Producto')}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</span><span class="font-semibold text-brand-brown whitespace-nowrap">$${Number(item.total || 0).toFixed(2)}</span></div>`).join('');
+                return `<article class="account-card bg-white rounded-2xl border border-brand-beige p-5 md:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div><span class="text-[10px] uppercase tracking-[.2em] text-brand-gold font-bold">Pedido</span><h3 class="font-serif text-xl text-brand-brown mt-1">${escapeHtml(order.orderNumber || '—')}</h3><p class="text-xs text-gray-400 mt-1">${escapeHtml(formatAccountDate(order.createdAt))}</p></div>
+                        <div class="sm:text-right"><span class="inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${canceled ? 'bg-red-50 text-red-600' : 'bg-brand-light text-brand-brown border border-brand-beige'}">${escapeHtml(status)}</span><div class="text-xl font-bold text-brand-brown mt-2">$${Number(order.total || 0).toFixed(2)}</div></div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-brand-beige space-y-1.5">${itemHtml || '<p class="text-xs text-gray-400">Detalle no disponible.</p>'}${items.length > 4 ? `<p class="text-[11px] text-gray-400">+ ${items.length-4} producto(s) más</p>` : ''}</div>
+                    ${statusHtml}
+                </article>`;
+            }).join('');
+        }
+
+        async function saveOrderToCustomerAccount(payload) {
+            if (!customerAccount.signedIn) return null;
+            const result = await customerRequest('createOrder', payload);
+            if (result.order) {
+                customerAccount.orders = [result.order, ...(customerAccount.orders || []).filter(o => o.orderNumber !== result.order.orderNumber)];
+            }
+            return result;
+        }
+
+        // --- 8. PANEL DE ADMINISTRADOR ---
         function renderAdminView() {
             const login = document.getElementById('admin-login-panel');
             const dashboard = document.getElementById('admin-dashboard');
@@ -2587,6 +3054,7 @@ const form = e.target;
                 dashboard.classList.remove('hidden');
                 renderAdminProducts();
                 loadAdminCoupons();
+                loadAdminOrders();
             } else {
                 dashboard.classList.add('hidden');
                 login.classList.remove('hidden');
@@ -2640,6 +3108,7 @@ const form = e.target;
             adminAuthenticated = false;
             adminSessionPassword = '';
             adminCoupons = [];
+            adminOrders = [];
             closeAdminProductModal();
             closeAdminCouponModal();
             renderAdminView();
@@ -2980,6 +3449,59 @@ const form = e.target;
             }
         }
 
+
+        async function loadAdminOrders() {
+            if (!adminAuthenticated) return;
+            const tbody = document.getElementById('admin-orders-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-brand-gold mr-2"></i>Cargando pedidos...</td></tr>';
+            try {
+                const result = await adminRequest('listOrders');
+                adminOrders = Array.isArray(result.orders) ? result.orders : [];
+                renderAdminOrders();
+            } catch (error) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+
+        function renderAdminOrders() {
+            const tbody = document.getElementById('admin-orders-body');
+            const empty = document.getElementById('admin-empty-orders');
+            if (!tbody || !empty) return;
+            if (!adminOrders.length) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            tbody.innerHTML = adminOrders.map(order => {
+                const options = ADMIN_ORDER_STATUSES.map(status => `<option value="${escapeHtml(status)}" ${status === order.status ? 'selected' : ''}>${escapeHtml(status)}</option>`).join('');
+                return `<tr class="hover:bg-brand-light/50">
+                    <td class="p-4 min-w-[190px]"><div class="font-semibold text-brand-brown">${escapeHtml(order.orderNumber || '—')}</div><div class="text-xs text-gray-400">${escapeHtml(order.delivery || '')}</div></td>
+                    <td class="p-4 min-w-[220px]"><div class="font-semibold text-brand-brown">${escapeHtml(order.customer || '')}</div><div class="text-xs text-gray-400">${escapeHtml(order.email || '')}</div></td>
+                    <td class="p-4 font-bold text-brand-brown">$${Number(order.total || 0).toFixed(2)}</td>
+                    <td class="p-4 min-w-[210px]"><select onchange="updateAdminOrderStatus('${escapeHtml(order.orderNumber || '')}', this.value, this)" class="w-full p-2 border border-brand-beige rounded-lg bg-white focus:outline-none focus:border-brand-gold">${options}</select></td>
+                    <td class="p-4 text-gray-500 whitespace-nowrap">${escapeHtml(formatAccountDate(order.createdAt))}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function updateAdminOrderStatus(orderNumber, status, selectEl) {
+            if (!adminAuthenticated || !orderNumber) return;
+            const previous = adminOrders.find(o => o.orderNumber === orderNumber)?.status || 'Recibido';
+            selectEl.disabled = true;
+            try {
+                const result = await adminRequest('updateOrderStatus', { orderNumber, status });
+                const target = adminOrders.find(o => o.orderNumber === orderNumber);
+                if (target) target.status = result.order?.status || status;
+                showToast(`Pedido ${orderNumber}: ${status}`);
+            } catch (error) {
+                selectEl.value = previous;
+                showToast(error.message);
+            } finally {
+                selectEl.disabled = false;
+            }
+        }
+
         function setupFilters() {
             // Extraer categorias únicas de los productos ya cargados
             const cats = [...new Set(productos.map(p => p.category))];
@@ -3280,6 +3802,7 @@ const form = e.target;
                 // --- 7. INICIALIZACIÓN (Boot Async) ---
         document.addEventListener('DOMContentLoaded', () => {
             syncThemeControls();
+            setupGoogleAccounts();
             // Iniciar extracción de datos
             setupCustomDeliveryDate();
             setupCustomCandlePreview();
