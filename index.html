@@ -2031,13 +2031,13 @@
                         <p class="text-gray-500 mt-2">Gestiona productos y cupones. Los cambios se guardan en tu Google Sheets.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="openAdminProductModal()" class="bg-brand-gold hover:bg-brand-goldhover text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
+                        <button type="button" onclick="openAdminProductModal()" class="bg-brand-gold hover:bg-brand-goldhover text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
                             <i class="fas fa-plus mr-2"></i>Agregar producto
                         </button>
-                        <button onclick="openAdminCouponModal()" class="bg-brand-dark hover:bg-brand-brown text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
+                        <button type="button" onclick="openAdminCouponModal()" class="bg-brand-dark hover:bg-brand-brown text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors">
                             <i class="fas fa-ticket-alt mr-2"></i>Agregar cupón
                         </button>
-                        <button onclick="adminLogout()" class="bg-white border border-brand-beige hover:border-brand-gold text-brand-brown px-5 py-3 rounded-lg text-sm font-bold transition-colors">
+                        <button type="button" onclick="adminLogout()" class="bg-white border border-brand-beige hover:border-brand-gold text-brand-brown px-5 py-3 rounded-lg text-sm font-bold transition-colors">
                             <i class="fas fa-sign-out-alt mr-2"></i>Salir
                         </button>
                     </div>
@@ -3873,7 +3873,19 @@
             body.set('action', action);
             body.set('password', passwordOverride ?? adminSessionPassword);
             Object.entries(payload).forEach(([key, value]) => body.set(key, value ?? ''));
-            const response = await fetch(ADMIN_API_URL, { method: 'POST', body });
+
+            let response;
+            try {
+                response = await fetch(ADMIN_API_URL, {
+                    method: 'POST',
+                    body,
+                    cache: 'no-store',
+                    redirect: 'follow'
+                });
+            } catch (error) {
+                throw new Error('No se pudo conectar con Google Apps Script. Revisa tu conexión, VPN o la implementación del Web App.');
+            }
+
             if (!response.ok) throw new Error(`Error de conexión (${response.status})`);
             const data = await response.json();
             if (!data.ok) throw new Error(data.error || 'No se pudo completar la operación.');
@@ -3936,7 +3948,7 @@
                     <td class="p-4 text-gray-600">${escapeHtml(p.category || '')}</td>
                     <td class="p-4 font-semibold text-brand-brown">${escapeHtml(formatProductPriceDisplay(p))}</td>
                     <td class="p-4 text-gray-600">${Number.isFinite(Number(p.stock)) ? Number(p.stock) : 0}</td>
-                    <td class="p-4"><div class="flex justify-end gap-2 min-w-[160px]"><button onclick="openAdminProductModal(${p.id})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button onclick="deleteAdminProduct(${p.id})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
+                    <td class="p-4"><div class="flex justify-end gap-2 min-w-[160px]"><button type="button" onclick="openAdminProductModal(${p.id})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button type="button" onclick="deleteAdminProduct(${p.id})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
                 </tr>`).join('');
         }
 
@@ -4155,7 +4167,7 @@
                         <td class="p-4 text-gray-600">${escapeHtml(minimumText)}</td>
                         <td class="p-4 text-gray-600">${escapeHtml(expiresText)}</td>
                         <td class="p-4"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${active ? 'Activo' : 'Inactivo'}</span></td>
-                        <td class="p-4"><div class="flex justify-end gap-2 min-w-[120px]"><button onclick="openAdminCouponModal(${Number(c.row)})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button onclick="deleteAdminCoupon(${Number(c.row)})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
+                        <td class="p-4"><div class="flex justify-end gap-2 min-w-[120px]"><button type="button" onclick="openAdminCouponModal(${Number(c.row)})" class="px-3 py-2 rounded-lg border border-brand-beige hover:border-brand-gold text-brand-brown transition-colors" title="Editar"><i class="fas fa-pen"></i></button><button type="button" onclick="deleteAdminCoupon(event, ${Number(c.row)})" class="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
                     </tr>`;
             }).join('');
         }
@@ -4236,17 +4248,39 @@
             }
         }
 
-        async function deleteAdminCoupon(row) {
+        async function deleteAdminCoupon(event, row) {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+
             const coupon = adminCoupons.find(c => Number(c.row) === Number(row));
             if (!coupon) return;
             if (!confirm(`¿Eliminar el cupón "${coupon.code}"?`)) return;
+
             try {
+                // Solo hacemos UNA llamada al servidor. Antes se borraba y enseguida
+                // se volvía a pedir toda la lista; esa segunda petición podía fallar
+                // y mostrar un falso "NetworkError" aunque el cupón ya se hubiera borrado.
                 await adminRequest('deleteCoupon', { row });
-                await loadAdminCoupons();
+
+                // Actualizamos la lista local sin volver a consultar Apps Script.
+                adminCoupons = adminCoupons
+                    .filter(c => Number(c.row) !== Number(row))
+                    .map(c => ({
+                        ...c,
+                        row: Number(c.row) > Number(row) ? Number(c.row) - 1 : Number(c.row)
+                    }));
+
+                renderAdminCoupons();
+
                 if (appliedCoupon?.code === coupon.code) removeCoupon(true);
-                showToast('Cupón eliminado');
+                showToast(`Cupón ${coupon.code} eliminado ✅`);
             } catch (error) {
-                showToast(error.message);
+                const msg = String(error?.message || error || '');
+                if (/networkerror|failed to fetch|fetch resource|network request failed/i.test(msg)) {
+                    showToast('No se pudo conectar con el administrador. Revisa la conexión y vuelve a intentarlo.');
+                } else {
+                    showToast(msg || 'No se pudo eliminar el cupón.');
+                }
             }
         }
 
