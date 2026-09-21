@@ -1664,6 +1664,7 @@
                                         <i class="fas fa-arrow-right"></i>
                                     </button>
                                     <p class="text-xs text-gray-400 mt-3 text-center">La imagen de referencia se enviará después en este mismo chat de WhatsApp. El precio de la vela personalizada se confirmará directamente.</p>
+                                    <p class="text-xs text-brand-gold mt-2 text-center"><i class="fas fa-user-check mr-1"></i>Si inicias sesión con Google antes de enviar, esta solicitud se guardará automáticamente en <strong>Mi cuenta → Mis pedidos</strong>.</p>
                                 </div>
                             </form>
                         </div>
@@ -2123,6 +2124,7 @@
                                     <th class="text-left p-4 font-semibold">Total</th>
                                     <th class="text-left p-4 font-semibold">Estado</th>
                                     <th class="text-left p-4 font-semibold">Fecha</th>
+                                    <th class="text-right p-4 font-semibold">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-orders-body" class="divide-y divide-brand-beige"></tbody>
@@ -3249,32 +3251,106 @@
                 return;
             }
 
+            if (!customerAccount.signedIn) {
+                const continueWithoutTracking = confirm('Para que esta vela personalizada aparezca en “Mis pedidos” y tenga seguimiento, inicia sesión con Google antes de enviarla.\n\n¿Quieres continuar por WhatsApp sin guardarla en tu cuenta?');
+                if (!continueWithoutTracking) {
+                    navigate('account');
+                    return;
+                }
+            }
+
             const [year, month, day] = deliveryDate.split('-');
             const formattedDate = `${day}/${month}/${year}`;
-
-            // Número fijo de MARGIE CANDLES.
+            const orderNumber = generateOrderNumber().replace(/^MC-/, 'MCP-');
+            const shippingAmount = parseFloat(shipping || '0') || 0;
             const whatsappNumber = '50374750007';
 
-            let message = `Hola MARGIE CANDLES, quiero solicitar una vela personalizada:\n\n`;
+            let message = `🕯️ *MARGIE CANDLES — VELA PERSONALIZADA*\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `🧾 *Solicitud:* ${orderNumber}\n\n`;
             message += `🎁 *Propósito / Ocasión:* ${purpose}\n`;
             message += `🕯️ *Tamaño:* ${size}\n`;
             message += `🌸 *Aroma:* ${aroma}\n`;
-            message += `📍 *Lugar de entrega:* ${deliveryPlace}\n`;
-            message += `🚚 *Costo de envío:* $${shipping}\n`;
             message += `📦 *Unidades requeridas:* ${quantity}\n`;
-            message += `📅 *Fecha de entrega:* ${formattedDate}\n`;
+            message += `📍 *Lugar de entrega:* ${deliveryPlace}\n`;
+            message += `🚚 *Costo de envío:* $${shippingAmount.toFixed(2)}\n`;
+            message += `📅 *Fecha solicitada:* ${formattedDate}\n`;
+            message += `💰 *Precio de la vela:* Por confirmar\n`;
+            message += imageFile
+                ? `🖼️ *Imagen de referencia:* Te la enviaré en este mismo chat después de esta solicitud.\n`
+                : `🖼️ *Imagen de referencia:* No se adjuntó imagen.\n`;
 
-            if (imageFile) {
-                message += `🖼️ *Imagen de referencia:* Te la enviaré en este mismo chat después de enviar la solicitud.`;
-            } else {
-                message += `🖼️ *Imagen de referencia:* No se adjuntó imagen.`;
+            const btn = document.getElementById('custom-submit-btn');
+            const originalHtml = btn?.innerHTML || '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = customerAccount.signedIn
+                    ? '<i class="fas fa-cloud-upload-alt mr-2"></i> Guardando solicitud...'
+                    : '<i class="fab fa-whatsapp text-xl mr-2"></i> Abriendo WhatsApp...';
+            }
+
+            let cloudSaved = false;
+            if (customerAccount.signedIn) {
+                try {
+                    const profile = customerAccount.profile || {};
+                    const customItem = {
+                        productId: 0,
+                        name: 'Vela personalizada',
+                        quantity: Number(quantity) || 1,
+                        size,
+                        aroma,
+                        unitPrice: 0,
+                        total: 0,
+                        isCustom: true,
+                        purpose,
+                        deliveryDate: formattedDate,
+                        imageProvided: !!imageFile,
+                        pricePending: true
+                    };
+
+                    await saveOrderToCustomerAccount({
+                        orderNumber,
+                        customer: profile.name || 'Cliente',
+                        email: profile.email || '',
+                        phone: '',
+                        delivery: deliveryPlace,
+                        payment: 'Precio personalizado por confirmar',
+                        subtotal: '0.00',
+                        discount: '0.00',
+                        shipping: shippingAmount.toFixed(2),
+                        total: shippingAmount.toFixed(2),
+                        coupon: '',
+                        preserveCart: '1',
+                        items: JSON.stringify([customItem])
+                    });
+                    cloudSaved = true;
+                    message += `\n━━━━━━━━━━━━━━━━━━\n`;
+                    message += `📲 *SEGUIMIENTO DE TU SOLICITUD*\n`;
+                    message += `Tu vela personalizada quedó guardada en tu cuenta de MARGIE CANDLES.\n`;
+                    message += `🌐 ${MARGIE_STORE_URL}\n`;
+                    message += `👤 Entra a *Mi cuenta → Mis pedidos* con la misma cuenta de Google.\n`;
+                    message += `🔎 Número de solicitud: *${orderNumber}*\n`;
+                    message += `✨ Te iremos actualizando el estado de tu pedido desde la página.`;
+                    if (btn) btn.innerHTML = '<i class="fab fa-whatsapp text-xl mr-2"></i> Abriendo WhatsApp...';
+                } catch (error) {
+                    console.error('No se pudo guardar la vela personalizada:', error);
+                    showToast('La solicitud seguirá por WhatsApp, pero no se pudo guardar en Mis pedidos.');
+                }
+            }
+
+            if (!customerAccount.signedIn || !cloudSaved) {
+                message += `\n\n🌐 Puedes usar ${MARGIE_STORE_URL} para iniciar sesión y revisar tus pedidos futuros.`;
             }
 
             const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-            // Funciona tanto en PC como en teléfono y no depende de que el
-            // número esté guardado en los contactos.
             window.location.href = whatsappUrl;
+
+            if (btn) {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }, 1200);
+            }
         }
 
         async function handleCheckout(e) {
@@ -3716,18 +3792,45 @@
             list.innerHTML = orders.map(order => {
                 const status = String(order.status || 'Recibido');
                 const items = parseOrderItems(order.items);
+                const customItem = items.find(item => item?.isCustom === true || String(item?.isCustom).toLowerCase() === 'true');
+                const isCustomOrder = !!customItem;
                 const currentIndex = ORDER_STATUSES.indexOf(status);
                 const canceled = status === 'Cancelado';
                 const statusHtml = canceled
                     ? '<div class="mt-4 rounded-lg bg-red-50 border border-red-100 text-red-600 px-4 py-3 text-sm font-semibold"><i class="fas fa-ban mr-2"></i>Pedido cancelado</div>'
-                    : `<div class="order-status-track">${ORDER_STATUSES.map((s,i) => `<div class="order-status-step ${i <= currentIndex ? 'done' : ''} ${i === currentIndex ? 'current' : ''}"><div class="order-status-dot">${i < currentIndex ? '<i class="fas fa-check"></i>' : i+1}</div><div class="order-status-label">${escapeHtml(s)}</div></div>`).join('')}</div>`;
-                const itemHtml = items.slice(0,4).map(item => `<div class="flex justify-between gap-3 text-xs text-gray-500"><span class="min-w-0 truncate">${Number(item.quantity)||1}x ${escapeHtml(item.name || 'Producto')}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</span><span class="font-semibold text-brand-brown whitespace-nowrap">$${Number(item.total || 0).toFixed(2)}</span></div>`).join('');
+                    : `<div class="order-status-track">${ORDER_STATUSES.filter(s => s !== 'Cancelado').map((s,i) => `<div class="order-status-step ${i <= currentIndex ? 'done' : ''} ${i === currentIndex ? 'current' : ''}"><div class="order-status-dot">${i < currentIndex ? '<i class="fas fa-check"></i>' : i+1}</div><div class="order-status-label">${escapeHtml(s)}</div></div>`).join('')}</div>`;
+
+                let itemHtml = '';
+                if (isCustomOrder) {
+                    itemHtml = `
+                        <div class="rounded-xl bg-brand-light/60 border border-brand-beige p-4">
+                            <div class="flex items-center gap-2 text-brand-gold font-bold text-sm mb-2"><i class="fas fa-magic"></i> Vela personalizada</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-gray-500">
+                                <p><strong class="text-brand-brown">Ocasión:</strong> ${escapeHtml(customItem.purpose || '—')}</p>
+                                <p><strong class="text-brand-brown">Tamaño:</strong> ${escapeHtml(customItem.size || '—')}</p>
+                                <p><strong class="text-brand-brown">Aroma:</strong> ${escapeHtml(customItem.aroma || '—')}</p>
+                                <p><strong class="text-brand-brown">Unidades:</strong> ${Number(customItem.quantity) || 1}</p>
+                                <p><strong class="text-brand-brown">Fecha solicitada:</strong> ${escapeHtml(customItem.deliveryDate || '—')}</p>
+                                <p><strong class="text-brand-brown">Imagen:</strong> ${customItem.imageProvided ? 'Se enviará por WhatsApp' : 'Sin imagen'}</p>
+                            </div>
+                        </div>`;
+                } else {
+                    itemHtml = items.slice(0,4).map(item => `<div class="flex justify-between gap-3 text-xs text-gray-500"><span class="min-w-0 truncate">${Number(item.quantity)||1}x ${escapeHtml(item.name || 'Producto')}${item.size ? ` · ${escapeHtml(item.size)}` : ''}</span><span class="font-semibold text-brand-brown whitespace-nowrap">$${Number(item.total || 0).toFixed(2)}</span></div>`).join('');
+                }
+
+                const totalHtml = isCustomOrder
+                    ? `<div class="text-sm font-bold text-brand-gold mt-2">Precio por confirmar</div><div class="text-xs text-gray-500 mt-1">Envío: $${Number(order.shipping || 0).toFixed(2)}</div>`
+                    : `<div class="text-xl font-bold text-brand-brown mt-2">$${Number(order.total || 0).toFixed(2)}</div>`;
+                const typeBadge = isCustomOrder
+                    ? '<span class="inline-flex mt-2 px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/20"><i class="fas fa-magic mr-1"></i>Personalizada</span>'
+                    : '';
+
                 return `<article class="account-card bg-white rounded-2xl border border-brand-beige p-5 md:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                        <div><span class="text-[10px] uppercase tracking-[.2em] text-brand-gold font-bold">Pedido</span><h3 class="font-serif text-xl text-brand-brown mt-1">${escapeHtml(order.orderNumber || '—')}</h3><p class="text-xs text-gray-400 mt-1">${escapeHtml(formatAccountDate(order.createdAt))}</p></div>
-                        <div class="sm:text-right"><span class="inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${canceled ? 'bg-red-50 text-red-600' : 'bg-brand-light text-brand-brown border border-brand-beige'}">${escapeHtml(status)}</span><div class="text-xl font-bold text-brand-brown mt-2">$${Number(order.total || 0).toFixed(2)}</div></div>
+                        <div><span class="text-[10px] uppercase tracking-[.2em] text-brand-gold font-bold">${isCustomOrder ? 'Solicitud' : 'Pedido'}</span><h3 class="font-serif text-xl text-brand-brown mt-1">${escapeHtml(order.orderNumber || '—')}</h3>${typeBadge}<p class="text-xs text-gray-400 mt-2">${escapeHtml(formatAccountDate(order.createdAt))}</p></div>
+                        <div class="sm:text-right"><span class="inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${canceled ? 'bg-red-50 text-red-600' : 'bg-brand-light text-brand-brown border border-brand-beige'}">${escapeHtml(status)}</span>${totalHtml}</div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-brand-beige space-y-1.5">${itemHtml || '<p class="text-xs text-gray-400">Detalle no disponible.</p>'}${items.length > 4 ? `<p class="text-[11px] text-gray-400">+ ${items.length-4} producto(s) más</p>` : ''}</div>
+                    <div class="mt-4 pt-4 border-t border-brand-beige space-y-1.5">${itemHtml || '<p class="text-xs text-gray-400">Detalle no disponible.</p>'}${!isCustomOrder && items.length > 4 ? `<p class="text-[11px] text-gray-400">+ ${items.length-4} producto(s) más</p>` : ''}</div>
                     ${statusHtml}
                 </article>`;
             }).join('');
@@ -4151,13 +4254,13 @@
         async function loadAdminOrders() {
             if (!adminAuthenticated) return;
             const tbody = document.getElementById('admin-orders-body');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-brand-gold mr-2"></i>Cargando pedidos...</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-brand-gold mr-2"></i>Cargando pedidos...</td></tr>';
             try {
                 const result = await adminRequest('listOrders');
                 adminOrders = Array.isArray(result.orders) ? result.orders : [];
                 renderAdminOrders();
             } catch (error) {
-                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">${escapeHtml(error.message)}</td></tr>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">${escapeHtml(error.message)}</td></tr>`;
             }
         }
 
@@ -4205,12 +4308,23 @@
             empty.classList.add('hidden');
             tbody.innerHTML = filteredOrders.map(order => {
                 const options = ADMIN_ORDER_STATUSES.map(status => `<option value="${escapeHtml(status)}" ${status === order.status ? 'selected' : ''}>${escapeHtml(status)}</option>`).join('');
+                const items = parseOrderItems(order.items);
+                const customItem = items.find(item => item?.isCustom === true || String(item?.isCustom).toLowerCase() === 'true');
+                const isCustomOrder = !!customItem;
+                const orderExtra = isCustomOrder
+                    ? `<div class="mt-1"><span class="inline-flex px-2 py-1 rounded-full bg-brand-gold/10 text-brand-gold text-[10px] font-bold"><i class="fas fa-magic mr-1"></i>Vela personalizada</span></div><div class="text-xs text-gray-400 mt-1">${escapeHtml(customItem.purpose || '')}${customItem.size ? ` · ${escapeHtml(customItem.size)}` : ''}${customItem.aroma ? ` · ${escapeHtml(customItem.aroma)}` : ''}${customItem.deliveryDate ? ` · ${escapeHtml(customItem.deliveryDate)}` : ''}</div>`
+                    : '';
+                const totalCell = isCustomOrder
+                    ? `<div class="font-bold text-brand-gold">Por confirmar</div><div class="text-xs text-gray-400">Envío $${Number(order.shipping || 0).toFixed(2)}</div>`
+                    : `<div class="font-bold text-brand-brown">$${Number(order.total || 0).toFixed(2)}</div>`;
+
                 return `<tr class="hover:bg-brand-light/50">
-                    <td class="p-4 min-w-[190px]"><div class="font-semibold text-brand-brown">${escapeHtml(order.orderNumber || '—')}</div><div class="text-xs text-gray-400">${escapeHtml(order.delivery || '')}</div></td>
+                    <td class="p-4 min-w-[220px]"><div class="font-semibold text-brand-brown">${escapeHtml(order.orderNumber || '—')}</div><div class="text-xs text-gray-400">${escapeHtml(order.delivery || '')}</div>${orderExtra}</td>
                     <td class="p-4 min-w-[220px]"><div class="font-semibold text-brand-brown">${escapeHtml(order.customer || '')}</div><div class="text-xs text-gray-400">${escapeHtml(order.email || '')}</div></td>
-                    <td class="p-4 font-bold text-brand-brown">$${Number(order.total || 0).toFixed(2)}</td>
+                    <td class="p-4 min-w-[120px]">${totalCell}</td>
                     <td class="p-4 min-w-[210px]"><select onchange="updateAdminOrderStatus('${escapeHtml(order.orderNumber || '')}', this.value, this)" class="w-full p-2 border border-brand-beige rounded-lg bg-white focus:outline-none focus:border-brand-gold">${options}</select></td>
                     <td class="p-4 text-gray-500 whitespace-nowrap">${escapeHtml(formatAccountDate(order.createdAt))}</td>
+                    <td class="p-4 text-right min-w-[120px]"><button type="button" onclick="deleteAdminOrder('${escapeHtml(order.orderNumber || '')}')" class="inline-flex items-center justify-center px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 text-xs font-bold transition-colors" title="Eliminar pedido"><i class="fas fa-trash-alt mr-2"></i>Eliminar</button></td>
                 </tr>`;
             }).join('');
         }
@@ -4230,6 +4344,23 @@
                 showToast(error.message);
             } finally {
                 selectEl.disabled = false;
+            }
+        }
+
+
+        async function deleteAdminOrder(orderNumber) {
+            if (!adminAuthenticated || !orderNumber) return;
+            const order = adminOrders.find(o => o.orderNumber === orderNumber);
+            const label = order ? `${order.orderNumber}${order.customer ? ` — ${order.customer}` : ''}` : orderNumber;
+            if (!confirm(`¿Eliminar definitivamente el pedido ${label}?\n\nEsta acción solo la puede hacer el administrador y también desaparecerá de “Mis pedidos” del cliente.`)) return;
+
+            try {
+                await adminRequest('deleteOrder', { orderNumber });
+                adminOrders = adminOrders.filter(o => o.orderNumber !== orderNumber);
+                renderAdminOrders();
+                showToast(`Pedido ${orderNumber} eliminado`);
+            } catch (error) {
+                showToast(error.message);
             }
         }
 
